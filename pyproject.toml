@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "aidsorter"
+version = "0.1.0"
+description = "Automated sorting system (ITE4 Project)"
+authors = ["chris1320 <chris1320is@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11.2"
+opencv-python = "^4.10.0.82"
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.2.3"
+pytest = "^8.2.2"
+black = "^24.4.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
