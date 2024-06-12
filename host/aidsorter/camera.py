@@ -22,6 +22,13 @@ def capture(  # pylint: disable=R0914
 
     frame_counter = 0
     fps = 0
+    fps_stats: list[float | None] = [  # min, max, avg of the last 100 fps values
+        None,
+        None,
+        None,
+    ]
+    last_fps: list[float] = []
+    last_fps_hist_len = 100
 
     row_size = 20  # pixels
     left_margin = 24  # pixels
@@ -60,14 +67,45 @@ def capture(  # pylint: disable=R0914
             fps = fps_avg_frame_count / (end_time - start_time)
             start_time = time.time()
             logger.debug("FPS = %s", fps)
+            # only keep the last <last_fps_hist_len> fps values
+            # last_fps.append(fps)
+            last_fps = last_fps[-last_fps_hist_len:] + [fps]
+
+            if fps_stats[0] is None or fps < fps_stats[0]:
+                fps_stats[0] = fps
+
+            if fps_stats[1] is None or fps > fps_stats[1]:
+                fps_stats[1] = fps
 
         # Show the FPS
         fps_text = f"FPS = {fps:.1f}"
-        text_location = (left_margin, row_size)
+        fps_min_text = f"MAX = {round(fps_stats[0], 1) if fps_stats[0] else 0}"
+        fps_max_text = f"MAX = {round(fps_stats[1], 1) if fps_stats[1] else 0}"
+        fps_text_location = (left_margin, row_size)
+        fps_min_text_location = (left_margin, row_size * 2)
+        fps_max_text_location = (left_margin, row_size * 3)
         _ = cv2.putText(
             raw_image,
             fps_text,
-            text_location,
+            fps_text_location,
+            cv2.FONT_HERSHEY_PLAIN,
+            font_size,
+            text_color,
+            font_thickness,
+        )
+        _ = cv2.putText(
+            raw_image,
+            fps_min_text,
+            fps_min_text_location,
+            cv2.FONT_HERSHEY_PLAIN,
+            font_size,
+            text_color,
+            font_thickness,
+        )
+        _ = cv2.putText(
+            raw_image,
+            fps_max_text,
+            fps_max_text_location,
             cv2.FONT_HERSHEY_PLAIN,
             font_size,
             text_color,
@@ -86,4 +124,12 @@ def capture(  # pylint: disable=R0914
     logger.info("Destroying all windows...")
     cv2.destroyAllWindows()
     logger.info("Done.")
+    try:
+        logger.info("Min FPS: %s", fps_stats[0])
+        logger.info("Max FPS: %s", fps_stats[1])
+        logger.info("Avg FPS: %s", sum(last_fps) / len(last_fps))
+
+    except ZeroDivisionError:
+        logger.error("Unable to calculate the average FPS.")
+
     return 0
