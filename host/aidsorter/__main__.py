@@ -4,7 +4,7 @@
 import argparse
 import sys
 
-from cv2 import __version__ as cv2_version
+from cv2 import __version__ as cv2_version  # pylint: disable=E0611
 
 from aidsorter import camera, info
 from aidsorter.logger import LoggerFactory

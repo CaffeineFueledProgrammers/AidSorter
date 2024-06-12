@@ -11,7 +11,9 @@ from aidsorter import exceptions, info
 from aidsorter.logger import LoggerFactory
 
 
-def capture(camera_id: int = 0, width: int = 640, height: int = 480) -> int:
+def capture(  # pylint: disable=R0914
+    camera_id: int = 0, width: int = 640, height: int = 480
+) -> int:
     """Capture video from the camera and detect objects.
 
     Args:
@@ -62,7 +64,7 @@ def capture(camera_id: int = 0, width: int = 640, height: int = 480) -> int:
         # Show the FPS
         fps_text = f"FPS = {fps:.1f}"
         text_location = (left_margin, row_size)
-        cv2.putText(
+        _ = cv2.putText(
             raw_image,
             fps_text,
             text_location,
