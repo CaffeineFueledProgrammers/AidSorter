@@ -15,7 +15,7 @@ def main() -> int:
     """
 
     logger = LoggerFactory().get_logger(__name__)
-    logger.info(info.TITLE)
+    logger.info("%s started.", info.TITLE)
 
     return 0
 
