@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "~3.11"
 tflite-support = "^0.4.4"
+opencv-python = "^4.10.0.82"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.2.3"
