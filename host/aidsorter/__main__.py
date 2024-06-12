@@ -1,18 +1,22 @@
-"""
-AidSorter - Automatic Goods Sorting System
+"""AidSorter - Automatic Goods Sorting System
 """
 
 import sys
 
+from aidsorter import info
+from aidsorter.logger import LoggerFactory
+
 
 def main() -> int:
-    """
-    The main function of the program.
+    """The main function of the program.
 
-    :returns int: The exit code of the program.
+    Returns:
+        The exit code of the program.
     """
 
-    print("AidSorter")
+    logger = LoggerFactory().get_logger(__name__)
+    logger.info(info.TITLE)
+
     return 0
 
 
