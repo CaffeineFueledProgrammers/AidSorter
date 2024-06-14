@@ -15,6 +15,7 @@ _Intelligent Systems_ course at Baliuag University.
 #### Host / Single Board Computer (SBC)
 
 - **Operating System**: Armbian 24.8.0 Bookworm
+- **Kernel Version**: 6.6.31-current-sunxi
 - **Python**: 3.11.2
 - **Poetry**: 1.3.2
 
