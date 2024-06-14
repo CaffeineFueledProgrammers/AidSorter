@@ -11,7 +11,7 @@ from aidsorter import exceptions, info
 from aidsorter.logger import LoggerFactory
 
 
-def capture(  # pylint: disable=R0914
+def capture(  # pylint: disable=R0914,R0915
     camera_id: int = 0, width: int = 640, height: int = 480
 ) -> int:
     """Capture video from the camera and detect objects.

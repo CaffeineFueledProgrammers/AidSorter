@@ -32,6 +32,7 @@ def main() -> int:
     logger.debug("\tCMD: %s", str(sys.argv))
     logger.info("\tPython version: %s", sys.version)
     logger.info("\tOpenCV version: %s", cv2_version)
+    # pylint: disable-next=W0511
     logger.info("\tTensorFlow version: N/A")  # FIXME: Add TensorFlow version
     logger.info("\tCamera ID: %d", camera_id)
     logger.info("\tDebug mode: %s", "enabled" if info.DEBUG_MODE else "disabled")
