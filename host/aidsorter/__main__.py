@@ -23,10 +23,10 @@ def main() -> int:
         "-c", "--camera", type=int, default=0, help="The index of the camera to use."
     )
     _ = arg_parser.add_argument(
-        "-w", "--width", type=int, default=640, help="The width of the camera frame."
+        "-x", "--width", type=int, default=640, help="The width of the camera frame."
     )
     _ = arg_parser.add_argument(
-        "-h", "--height", type=int, default=480, help="The height of the camera frame."
+        "-y", "--height", type=int, default=480, help="The height of the camera frame."
     )
     parsed_args = arg_parser.parse_args()
     camera_id: int = parsed_args.camera  # pyright: ignore[reportAny]
