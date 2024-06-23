@@ -11,7 +11,7 @@ from typing import Optional
 
 import cv2
 
-from aidsorter import exceptions, info
+from aidsorter import detector, exceptions, info, visualizer
 from aidsorter.logger import LoggerFactory
 
 
@@ -20,6 +20,8 @@ def capture(  # pylint: disable=R0914,R0915
     *,
     width: int = 640,
     height: int = 480,
+    cpu_threads: Optional[int] = None,
+    model_name: str = "default.tflite",
 ) -> int:
     """Capture video from the camera and detect objects.
 
@@ -27,6 +29,8 @@ def capture(  # pylint: disable=R0914,R0915
         camera_id: The ID of the camera to use. (default: 0)
         width: The width of the camera frame. (default: 640)
         height: The height of the camera frame. (default: 480)
+        cpu_threads: Override the number of CPU threads to use.
+        model_name: The name of the model to use. (default: "default.tflite")
 
     Raises:
         exceptions.CameraError: Raised when the camera is not available.
@@ -43,14 +47,10 @@ def capture(  # pylint: disable=R0914,R0915
         None,
     ]
     last_fps: list[float] = []
-    last_fps_hist_len = 100
-
-    row_size = 20  # pixels
-    left_margin = 24  # pixels
-    text_color = (255, 255, 255)
-    font_size = 1
-    font_thickness = 1
-    fps_avg_frame_count = 10
+    last_fps_hist_len = 1000
+    fps_avg_frame_count: int = 10
+    stats_style = visualizer.StatsStyle()
+    tf_detector = detector.create_detector(model_name, cpu_threads)
 
     start_time = time.time()
     logger = LoggerFactory().get_logger(__name__)
@@ -58,6 +58,7 @@ def capture(  # pylint: disable=R0914,R0915
     logger.info("Starting the detection process...")
     logger.info("Using camera ID: %s", camera_id)
     logger.info("Using camera resolution: %sx%s", width, height)
+    logger.info("Using CPU threads: %s", cpu_threads)
     cam_cap = cv2.VideoCapture(camera_id)
     _ = cam_cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     _ = cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
@@ -71,10 +72,10 @@ def capture(  # pylint: disable=R0914,R0915
         frame_counter += 1
         raw_image = cv2.flip(raw_image, 1)
 
-        # Convert the image from BGR to RGB as required by the TFLite model.
-        # Create a TensorImage object from the RGB image.
-        # Run object detection estimation using the model.
-        # Draw keypoints and edges on input image
+        detection_result = detector.detect_objects(tf_detector, raw_image)
+        processed_image = visualizer.draw_detection_result(
+            raw_image, detection_result, stats_style
+        )
 
         # Calculate the FPS
         if frame_counter % fps_avg_frame_count == 0:
@@ -92,39 +93,8 @@ def capture(  # pylint: disable=R0914,R0915
             if fps_stats[1] is None or fps > fps_stats[1]:
                 fps_stats[1] = fps
 
-        # Show the FPS
-        fps_text = f"FPS = {fps:.1f}"
-        fps_min_text = f"MAX = {round(fps_stats[0], 1) if fps_stats[0] else 0}"
-        fps_max_text = f"MAX = {round(fps_stats[1], 1) if fps_stats[1] else 0}"
-        fps_text_location = (left_margin, row_size)
-        fps_min_text_location = (left_margin, row_size * 2)
-        fps_max_text_location = (left_margin, row_size * 3)
-        _ = cv2.putText(
-            raw_image,
-            fps_text,
-            fps_text_location,
-            cv2.FONT_HERSHEY_PLAIN,
-            font_size,
-            text_color,
-            font_thickness,
-        )
-        _ = cv2.putText(
-            raw_image,
-            fps_min_text,
-            fps_min_text_location,
-            cv2.FONT_HERSHEY_PLAIN,
-            font_size,
-            text_color,
-            font_thickness,
-        )
-        _ = cv2.putText(
-            raw_image,
-            fps_max_text,
-            fps_max_text_location,
-            cv2.FONT_HERSHEY_PLAIN,
-            font_size,
-            text_color,
-            font_thickness,
+        processed_image = visualizer.draw_fps(
+            processed_image, fps, fps_stats, stats_style
         )
 
         # Stop the program if the ESC key is pressed.
@@ -132,7 +102,7 @@ def capture(  # pylint: disable=R0914,R0915
             logger.info("ESC key pressed. Exiting...")
             break
 
-        cv2.imshow(info.TITLE, raw_image)
+        cv2.imshow(info.TITLE, processed_image)
 
     logger.info("Releasing camera...")
     cam_cap.release()
