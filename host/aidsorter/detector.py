@@ -6,9 +6,7 @@ This module contains the image recognition system.
 # quit your whining
 # pyright: reportDeprecated=false,reportMissingTypeStubs=false
 
-import multiprocessing
 import os
-from typing import Optional
 
 import cv2
 from cv2.typing import MatLike
@@ -20,14 +18,12 @@ from aidsorter import exceptions
 from aidsorter.logger import LoggerFactory
 
 
-def create_detector(
-    model_name: str, num_threads: Optional[int] = None
-) -> tf_vision.ObjectDetector:
+def create_detector(model_name: str, num_threads: int) -> tf_vision.ObjectDetector:
     """Create a new object detector from the given model name.
 
     Args:
         model_name: The filename of the model to use located in `models/` directory.
-        num_threads: The number of threads to use. (default: CPU count)
+        num_threads: The number of threads to use.
 
     Returns:
         The new object instance.
@@ -35,7 +31,6 @@ def create_detector(
 
     logger = LoggerFactory().get_logger(__name__)
 
-    num_threads = num_threads or multiprocessing.cpu_count()
     logger.info("Using %s CPU threads for object detection.", num_threads)
     available_models = os.listdir(os.path.join(os.getcwd(), "models"))
     logger.debug("Files in `models/` directory: %s", str(available_models))

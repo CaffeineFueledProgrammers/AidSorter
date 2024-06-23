@@ -6,6 +6,7 @@ This module contains the system that handles camera features.
 # quit your whining
 # pyright: reportDeprecated=false
 
+import multiprocessing
 import time
 from typing import Optional
 
@@ -126,6 +127,7 @@ def capture(
     latest_fps = 0
     fps = FPSConfig()
     stats_style = visualizer.StatsStyle()
+    cpu_threads = cpu_threads or multiprocessing.cpu_count()
     tf_detector = detector.create_detector(model_name, cpu_threads)
 
     start_time = time.time()
