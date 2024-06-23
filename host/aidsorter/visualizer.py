@@ -13,8 +13,6 @@ import cv2
 from cv2.typing import MatLike
 from tflite_support.task.processor import DetectionResult
 
-from aidsorter.logger import LoggerFactory
-
 
 @dataclass
 class StatsStyle:
@@ -102,8 +100,6 @@ def draw_fps(
     """
 
     stats_style = stats_style or StatsStyle()
-    logger = LoggerFactory().get_logger(__name__)
-    # logger.debug("Drawing FPS on the image.")
 
     osd_contents: tuple[tuple[str, tuple[int, int]], ...] = (
         (f"FPS = {latest_fps:.1f}", (stats_style.left_margin, stats_style.row_size)),
