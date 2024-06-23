@@ -22,9 +22,16 @@ def main() -> int:
     _ = arg_parser.add_argument(
         "-c", "--camera", type=int, default=0, help="The index of the camera to use."
     )
-
+    _ = arg_parser.add_argument(
+        "-w", "--width", type=int, default=640, help="The width of the camera frame."
+    )
+    _ = arg_parser.add_argument(
+        "-h", "--height", type=int, default=480, help="The height of the camera frame."
+    )
     parsed_args = arg_parser.parse_args()
     camera_id: int = parsed_args.camera  # pyright: ignore[reportAny]
+    cam_width: int = parsed_args.width  # pyright: ignore[reportAny]
+    cam_height: int = parsed_args.height  # pyright: ignore[reportAny]
 
     logger = LoggerFactory().get_logger(__name__)
     logger.info("%s started.", info.TITLE)
@@ -35,7 +42,7 @@ def main() -> int:
     logger.info("\tCamera ID: %d", camera_id)
     logger.info("\tDebug mode: %s", "enabled" if info.DEBUG_MODE else "disabled")
 
-    exit_code = camera.capture(camera_id)
+    exit_code = camera.capture(camera_id, width=cam_width, height=cam_height)
 
     logger.info("%s exited with code %s.", info.TITLE, exit_code)
     return exit_code

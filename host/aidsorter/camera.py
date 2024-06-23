@@ -16,7 +16,10 @@ from aidsorter.logger import LoggerFactory
 
 
 def capture(  # pylint: disable=R0914,R0915
-    camera_id: int = 0, width: int = 640, height: int = 480
+    camera_id: int = 0,
+    *,
+    width: int = 640,
+    height: int = 480,
 ) -> int:
     """Capture video from the camera and detect objects.
 
@@ -24,6 +27,12 @@ def capture(  # pylint: disable=R0914,R0915
         camera_id: The ID of the camera to use. (default: 0)
         width: The width of the camera frame. (default: 640)
         height: The height of the camera frame. (default: 480)
+
+    Raises:
+        exceptions.CameraError: Raised when the camera is not available.
+
+    Returns:
+        The exit code.
     """
 
     frame_counter = 0
