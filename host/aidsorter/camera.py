@@ -3,7 +3,11 @@
 This module contains the image recognition system.
 """
 
+# we are using 3.9, and most warnings are for 3.10+
+# pyright: reportDeprecated=false
+
 import time
+from typing import Optional
 
 import cv2
 
@@ -18,11 +22,13 @@ def capture(  # pylint: disable=R0914,R0915
 
     Args:
         camera_id: The ID of the camera to use. (default: 0)
+        width: The width of the camera frame. (default: 640)
+        height: The height of the camera frame. (default: 480)
     """
 
     frame_counter = 0
     fps = 0
-    fps_stats: list[float | None] = [  # min, max, avg of the last 100 fps values
+    fps_stats: list[Optional[float]] = [  # min, max, avg of the last 100 fps values
         None,
         None,
         None,
@@ -130,6 +136,6 @@ def capture(  # pylint: disable=R0914,R0915
         logger.info("Avg FPS: %s", sum(last_fps) / len(last_fps))
 
     except ZeroDivisionError:
-        logger.error("Unable to calculate the average FPS.")
+        logger.warning("Unable to calculate the average FPS.")
 
     return 0

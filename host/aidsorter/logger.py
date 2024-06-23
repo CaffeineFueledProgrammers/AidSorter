@@ -1,7 +1,11 @@
 """AidSorter - Automatic Goods Sorting System
 """
 
+# we are using 3.9, and most warnings are for 3.10+
+# pyright: reportDeprecated=false
+
 import logging
+from typing import Optional
 
 from aidsorter import info
 
@@ -9,7 +13,7 @@ from aidsorter import info
 class LoggerFactory:  # pylint: disable=R0903,C0115
     def __init__(
         self,
-        log_level: int | None = None,
+        log_level: Optional[int] = None,
     ):
         """Create a new LoggerFactory object.
 
