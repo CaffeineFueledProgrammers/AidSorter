@@ -3,7 +3,7 @@
 This module contains the main function of the program.
 """
 
-# we are using 3.9, and most warnings are for 3.10+
+# quit your whining
 # pyright: reportDeprecated=false
 
 import argparse
@@ -47,10 +47,11 @@ def main() -> int:
         "--model",
         type=str,
         default="default.tflite",
-        help='Override the model to use. It should be located in the "models/" directory.',
+        help='Override the model to use. Should be located in the "models/" directory.',
     )
 
     parsed_args = arg_parser.parse_args()
+    # ignore galore!
     camera_id: int = parsed_args.camera  # pyright: ignore[reportAny]
     cam_width: int = parsed_args.width  # pyright: ignore[reportAny]
     cam_height: int = parsed_args.height  # pyright: ignore[reportAny]
@@ -70,8 +71,7 @@ def main() -> int:
 
     exit_code = camera.capture(
         camera_id,
-        width=cam_width,
-        height=cam_height,
+        resolution=(cam_width, cam_height),
         cpu_threads=cpu_threads,
         model_name=model_name,
     )

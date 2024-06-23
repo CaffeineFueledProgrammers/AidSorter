@@ -3,7 +3,7 @@
 This module contains the visualization system.
 """
 
-# we are using 3.9, and most warnings are for 3.10+
+# quit your whining
 # pyright: reportDeprecated=false,reportMissingTypeStubs=false
 
 from dataclasses import dataclass
@@ -51,11 +51,9 @@ def draw_detection_result(
       Image with bounding boxes.
     """
 
-    logger = LoggerFactory().get_logger(__name__)
     stats_style = stats_style or StatsStyle()
 
-    for idx, detection in enumerate(detection_result.detections):
-        logger.debug("Creating bounding box for detection #%d", idx)
+    for detection in detection_result.detections:
 
         # Draw bounding_box
         bbox = detection.bounding_box
@@ -87,15 +85,15 @@ def draw_detection_result(
 
 def draw_fps(
     image: MatLike,
-    fps: float,
-    fps_stats: list[Optional[float]],
+    latest_fps: float,
+    fps_stats: tuple[Optional[float], Optional[float], Optional[float]],
     stats_style: Optional[StatsStyle] = None,
 ) -> MatLike:
     """Draw the FPS on the top-left corner of the image.
 
     Args:
         image: The input image.
-        fps: The current FPS.
+        latest_fps: The current FPS.
         fps_stats: The min, max, and avg of the FPS.
         stats_style: The style to use for drawing statistics.
 
@@ -105,41 +103,33 @@ def draw_fps(
 
     stats_style = stats_style or StatsStyle()
     logger = LoggerFactory().get_logger(__name__)
-    logger.debug("Drawing FPS on the image.")
+    # logger.debug("Drawing FPS on the image.")
 
-    # Show the FPS
-    fps_text = f"FPS = {fps:.1f}"
-    fps_min_text = f"MIN = {round(fps_stats[0], 1) if fps_stats[0] else 0}"
-    fps_max_text = f"MAX = {round(fps_stats[1], 1) if fps_stats[1] else 0}"
-    fps_text_location = (stats_style.left_margin, stats_style.row_size)
-    fps_min_text_location = (stats_style.left_margin, stats_style.row_size * 2)
-    fps_max_text_location = (stats_style.left_margin, stats_style.row_size * 3)
-    _ = cv2.putText(
-        image,
-        fps_text,
-        fps_text_location,
-        cv2.FONT_HERSHEY_PLAIN,
-        stats_style.font_size,
-        stats_style.text_color,
-        stats_style.font_thickness,
+    osd_contents: tuple[tuple[str, tuple[int, int]], ...] = (
+        (f"FPS = {latest_fps:.1f}", (stats_style.left_margin, stats_style.row_size)),
+        (
+            f"MIN = {round(fps_stats[0], 1) if fps_stats[0] else 0}",
+            (stats_style.left_margin, stats_style.row_size * 2),
+        ),
+        (
+            f"MAX = {round(fps_stats[1], 1) if fps_stats[1] else 0}",
+            (stats_style.left_margin, stats_style.row_size * 3),
+        ),
+        (
+            f"AVG = {round(fps_stats[2], 1) if fps_stats[2] else 0}",
+            (stats_style.left_margin, stats_style.row_size * 4),
+        ),
     )
-    _ = cv2.putText(
-        image,
-        fps_min_text,
-        fps_min_text_location,
-        cv2.FONT_HERSHEY_PLAIN,
-        stats_style.font_size,
-        stats_style.text_color,
-        stats_style.font_thickness,
-    )
-    _ = cv2.putText(
-        image,
-        fps_max_text,
-        fps_max_text_location,
-        cv2.FONT_HERSHEY_PLAIN,
-        stats_style.font_size,
-        stats_style.text_color,
-        stats_style.font_thickness,
-    )
+
+    for fps_text, fps_text_location in osd_contents:
+        _ = cv2.putText(
+            image,
+            fps_text,
+            fps_text_location,
+            cv2.FONT_HERSHEY_PLAIN,
+            stats_style.font_size,
+            stats_style.text_color,
+            stats_style.font_thickness,
+        )
 
     return image

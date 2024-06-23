@@ -3,7 +3,7 @@
 This module contains the image recognition system.
 """
 
-# we are using 3.9, and most warnings are for 3.10+
+# quit your whining
 # pyright: reportDeprecated=false,reportMissingTypeStubs=false
 
 import multiprocessing
@@ -38,7 +38,7 @@ def create_detector(
     num_threads = num_threads or multiprocessing.cpu_count()
     logger.info("Using %s CPU threads for object detection.", num_threads)
     available_models = os.listdir(os.path.join(os.getcwd(), "models"))
-    logger.debug("Available models: %s", str(available_models))
+    logger.debug("Files in `models/` directory: %s", str(available_models))
     if model_name not in available_models:
         logger.fatal("Model '%s' not found in available models.", model_name)
         raise exceptions.ModelNotFoundError(
