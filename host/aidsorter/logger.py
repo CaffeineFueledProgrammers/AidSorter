@@ -5,6 +5,8 @@
 # pyright: reportDeprecated=false
 
 import logging
+from logging.handlers import RotatingFileHandler
+from time import strftime
 from typing import Optional
 
 from aidsorter import info
@@ -42,8 +44,11 @@ class LoggerFactory:  # pylint: disable=R0903,C0115
         if not logger.handlers:
             # handlers
             stream_handler = logging.StreamHandler()
-            file_handler = logging.FileHandler(
-                info.LOG_FILEPATH, encoding=info.ENCODING
+            file_handler = RotatingFileHandler(
+                info.LOG_FILEPATH.format(strftime("%d-%m-%y_%H-%M-%S")),
+                maxBytes=info.LOG_MAX_BYTES,
+                backupCount=info.LOG_BACKUP_COUNT,
+                encoding=info.ENCODING,
             )
 
             # formatters
