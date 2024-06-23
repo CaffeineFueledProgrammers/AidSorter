@@ -102,7 +102,7 @@ class FPSConfig:
 
 
 def capture(
-    camera_id: int = 0,
+    camera_id: int = 1,
     *,
     resolution: tuple[int, int] = (640, 480),
     cpu_threads: Optional[int] = None,

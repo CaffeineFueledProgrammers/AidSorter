@@ -27,7 +27,7 @@ def main() -> int:
     arg_parser = argparse.ArgumentParser(info.TITLE)
 
     _ = arg_parser.add_argument(
-        "-c", "--camera", type=int, default=0, help="The index of the camera to use."
+        "-c", "--camera", type=int, default=1, help="The index of the camera to use."
     )
     _ = arg_parser.add_argument(
         "-x", "--width", type=int, default=640, help="The width of the camera frame."
