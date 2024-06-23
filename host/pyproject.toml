@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Automated sorting system (ITE4 Project)"
 authors = ["chris1320 <chris1320is@protonmail.com>"]
 license = "MIT"
-readme = "README.md"
+readme = "../README.md"
 
 [tool.poetry.dependencies]
 python = "~3.9"
