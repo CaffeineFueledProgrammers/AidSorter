@@ -27,6 +27,8 @@ class FPSConfig:
             avg_frame_count: Get the average of the last <avg_frame_count> frames.
         """
 
+        self.frame_count = 0  # The current frame count
+        self.latest_fps = 0  # The latest FPS value
         self.__fps: list[float] = []
         self.__history_len = history_len
         self.__avg_frame_count: int = avg_frame_count
@@ -123,8 +125,6 @@ def capture(
         The exit code.
     """
 
-    frame_counter = 0
-    latest_fps = 0
     fps = FPSConfig()
     stats_style = visualizer.StatsStyle()
     cpu_threads = cpu_threads or multiprocessing.cpu_count()
@@ -147,15 +147,14 @@ def capture(
             logger.error("Unable to read data from webcam.")
             raise exceptions.CameraError("ERROR: Unable to read data from webcam.")
 
-        frame_counter += 1
+        fps.frame_count += 1
         image = cv2.flip(image, 1)
 
-        image = visualizer.draw_detection_result(
-            image, detector.detect_objects(tf_detector, image), stats_style
-        )
+        detection_result = detector.detect_objects(tf_detector, image)
+        image = visualizer.draw_detection_result(image, detection_result, stats_style)
 
         # Calculate the FPS
-        if frame_counter % fps.avg_frame_count == 0:
+        if fps.frame_count % fps.avg_frame_count == 0:
             end_time = time.time()
             latest_fps = fps.avg_frame_count / (end_time - start_time)
             start_time = time.time()
@@ -164,7 +163,7 @@ def capture(
 
         image = visualizer.draw_fps(
             image,
-            latest_fps,
+            fps.latest_fps,
             (fps.minimum, fps.maximum, fps.average),
             stats_style,
         )
