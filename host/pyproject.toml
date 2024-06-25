@@ -4,10 +4,11 @@ version = "0.1.0"
 description = "Automated sorting system (ITE4 Project)"
 authors = ["chris1320 <chris1320is@protonmail.com>"]
 license = "MIT"
-readme = "README.md"
+readme = "../README.md"
+repository = "https://github.com/CaffeineFueledProgrammers/AidSorter"
 
 [tool.poetry.dependencies]
-python = "~3.11"
+python = "~3.9"
 tflite-support = "^0.4.4"
 opencv-python = "^4.10.0.82"
 
