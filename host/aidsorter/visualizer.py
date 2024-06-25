@@ -52,7 +52,6 @@ def draw_detection_result(
     stats_style = stats_style or StatsStyle()
 
     for detection in detection_result.detections:
-
         # Draw bounding_box
         bbox = detection.bounding_box
         start_point = bbox.origin_x, bbox.origin_y
