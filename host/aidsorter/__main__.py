@@ -7,6 +7,7 @@ This module contains the main function of the program.
 # pyright: reportDeprecated=false
 
 import argparse
+import logging
 import os
 import sys
 from typing import Optional
@@ -67,7 +68,10 @@ def main() -> int:
     logger.info("\tPWD: %s", os.getcwd())
     logger.info("\tCamera ID: %d", camera_id)
     logger.info("\tModel Name: %s", model_name)
-    logger.info("\tDebug mode: %s", "Enabled" if info.DEBUG_MODE else "Disabled")
+    logger.info(
+        "\tDebug mode: %s",
+        "Enabled" if info.DEBUG_MODE == logging.DEBUG else "Disabled",
+    )
 
     exit_code = camera.capture(
         camera_id,
