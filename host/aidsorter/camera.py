@@ -109,6 +109,7 @@ def capture(
     resolution: tuple[int, int] = (640, 480),
     cpu_threads: Optional[int] = None,
     model_name: str = "default.tflite",
+    camera_feed: bool = True,
 ) -> int:
     """Capture video from the camera and detect objects.
 
@@ -117,6 +118,7 @@ def capture(
         resolution: The resolution of the camera frame. (default: (640, 480))
         cpu_threads: Override the number of CPU threads to use.
         model_name: The name of the model to use. (default: "default.tflite")
+        camera_feed: Display the camera feed. (default: True)
 
     Raises:
         exceptions.CameraError: Raised when the camera is not available.
@@ -142,38 +144,59 @@ def capture(
     _ = cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
 
     while cam_cap.isOpened():
-        read_success, image = cam_cap.read()
-        if not read_success:
-            logger.error("Unable to read data from webcam.")
-            raise exceptions.CameraError("ERROR: Unable to read data from webcam.")
+        try:
+            read_success, image = cam_cap.read()
+            if not read_success:
+                logger.error("Unable to read data from webcam.")
+                raise exceptions.CameraError("ERROR: Unable to read data from webcam.")
 
-        fps.frame_count += 1
-        image = cv2.flip(image, 1)
+            fps.frame_count += 1
+            image = cv2.flip(image, 1)
 
-        detection_result = detector.detect_objects(tf_detector, image)
-        image = visualizer.draw_detection_result(image, detection_result, stats_style)
+            # Detect objects in the image
+            detection_result = detector.detect_objects(tf_detector, image)
 
-        # Calculate the FPS
-        if fps.frame_count % fps.avg_frame_count == 0:
-            end_time = time.time()
-            latest_fps = fps.avg_frame_count / (end_time - start_time)
-            start_time = time.time()
-            logger.debug("FPS = %s", latest_fps)
-            fps.add_record(latest_fps)
+            logger.info("Detected objects: %d", len(detection_result.detections))
+            logger.debug(
+                "Detection: %s",
+                [detection.categories for detection in detection_result.detections],
+            )
+            # pylint: disable-next=fixme
+            # TODO: send data to MCU
+            # for detection in detection_result.detections:
 
-        image = visualizer.draw_fps(
-            image,
-            fps.latest_fps,
-            (fps.minimum, fps.maximum, fps.average),
-            stats_style,
-        )
+            # Calculate the FPS
+            if fps.frame_count % fps.avg_frame_count == 0:
+                end_time = time.time()
+                latest_fps = fps.avg_frame_count / (end_time - start_time)
+                start_time = time.time()
+                logger.debug("FPS = %s", latest_fps)
+                fps.add_record(latest_fps)
 
-        # Stop the program if the ESC key is pressed.
-        if cv2.waitKey(1) == 27:
-            logger.info("ESC key pressed. Exiting...")
+            if camera_feed:
+                # draw detection results,
+                # draw FPS stats,
+                # and display the camera feed.
+                cv2.imshow(
+                    f"{info.TITLE} | Camera Feed",
+                    visualizer.draw_fps(
+                        visualizer.draw_detection_result(
+                            image, detection_result, stats_style
+                        ),
+                        fps.latest_fps,
+                        (fps.minimum, fps.maximum, fps.average),
+                        stats_style,
+                    ),
+                )
+
+                # Stop the program if the ESC key is pressed.
+                if cv2.waitKey(1) == 27:
+                    logger.info("ESC key pressed. Exiting...")
+                    break
+
+        except KeyboardInterrupt:
+            logger.info("KeyboardInterrupt detected.")
             break
-
-        cv2.imshow(info.TITLE, image)
 
     logger.info("Releasing camera...")
     cam_cap.release()

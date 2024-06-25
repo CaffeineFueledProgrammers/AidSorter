@@ -5,7 +5,7 @@ import logging
 import os
 
 NAME = "AidSorter"
-VERSION = (0, 1, 0)
+VERSION = (0, 2, 0)
 TITLE = f"{NAME} v{'.'.join(map(str, VERSION))}"
 
 DEBUG_MODE = (
