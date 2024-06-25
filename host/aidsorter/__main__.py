@@ -11,7 +11,6 @@ import logging
 import os
 import sys
 import traceback
-from typing import Optional
 
 from cv2.version import opencv_version
 
@@ -29,20 +28,13 @@ def main() -> int:
     arg_parser = argparse.ArgumentParser(info.TITLE)
 
     _ = arg_parser.add_argument(
-        "-c", "--camera", type=int, default=1, help="The index of the camera to use."
+        "-C", "--camera", type=int, default=1, help="The index of the camera to use."
     )
     _ = arg_parser.add_argument(
-        "-x", "--width", type=int, default=640, help="The width of the camera frame."
-    )
-    _ = arg_parser.add_argument(
-        "-y", "--height", type=int, default=480, help="The height of the camera frame."
-    )
-    _ = arg_parser.add_argument(
-        "-t",
-        "--threads",
-        type=int,
-        default=None,
-        help="The number of threads to use. (default: CPU count)",
+        "-c",
+        "--config",
+        default=info.DEFAULT_CONFIG_PATH,
+        help="The path to the configuration file.",
     )
     _ = arg_parser.add_argument(
         "-m",
@@ -61,9 +53,9 @@ def main() -> int:
     parsed_args = arg_parser.parse_args()
     # ignore galore!
     camera_id: int = parsed_args.camera  # pyright: ignore[reportAny]
-    cam_width: int = parsed_args.width  # pyright: ignore[reportAny]
-    cam_height: int = parsed_args.height  # pyright: ignore[reportAny]
-    cpu_threads: Optional[int] = parsed_args.threads  # pyright: ignore[reportAny]
+    config_path: str = (
+        parsed_args.config or info.DEFAULT_CONFIG_PATH  # pyright: ignore[reportAny]
+    )
     model_name: str = parsed_args.model  # pyright: ignore[reportAny]
     display: bool = parsed_args.display  # pyright: ignore[reportAny]
 
@@ -75,7 +67,7 @@ def main() -> int:
     logger.info("\tOpenCV version: %s", opencv_version)
     logger.info("\tPWD: %s", os.getcwd())
     logger.info("\tCamera ID: %d", camera_id)
-    logger.info("\tResolution: %dx%d", cam_width, cam_height)
+    logger.info("\tConfig Path: %s", config_path)
     logger.info("\tModel Name: %s", model_name)
     logger.info("\tCamera Feed: %s", "Enabled" if display else "Disabled")
     logger.info(
@@ -85,9 +77,8 @@ def main() -> int:
 
     try:
         exit_code = camera.capture(
+            config_path,
             camera_id,
-            resolution=(cam_width, cam_height),
-            cpu_threads=cpu_threads,
             model_name=model_name,
             camera_feed=display,
         )

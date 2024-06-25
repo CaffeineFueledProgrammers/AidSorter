@@ -10,3 +10,7 @@ class CameraError(Exception):
 
 class ModelNotFoundError(Exception):
     """Raised when a model is not found in the models/ directory."""
+
+
+class InvalidMCUConfigError(Exception):
+    """Raised when an invalid MCU configuration is detected."""

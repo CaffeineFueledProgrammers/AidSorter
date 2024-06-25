@@ -19,3 +19,5 @@ LOG_DATE_FORMAT = "%d-%m-%y_%H-%M-%S"
 LOG_MAX_BYTES = 1024 * 1024  # 1 MB
 LOG_BACKUP_COUNT = 5  # keep 5 logfiles
 ENCODING = "utf-8"
+
+DEFAULT_CONFIG_PATH = os.path.join(os.getcwd(), "aidsorter.conf")
