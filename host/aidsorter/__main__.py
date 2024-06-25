@@ -3,9 +3,6 @@
 This module contains the main function of the program.
 """
 
-# quit your whining
-# pyright: reportDeprecated=false
-
 import argparse
 import logging
 import os

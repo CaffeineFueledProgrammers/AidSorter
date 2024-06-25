@@ -25,7 +25,7 @@ class LoggerFactory:  # pylint: disable=R0903,C0115
 
         # Set the log level based on the environment variable, or
         # the provided log level.
-        self.log_level = log_level if log_level is not None else (info.DEBUG_MODE)
+        self.log_level = log_level if log_level is not None else info.DEBUG_MODE
 
     def get_logger(self, name: str) -> logging.Logger:
         """Get a logger with the provided name.

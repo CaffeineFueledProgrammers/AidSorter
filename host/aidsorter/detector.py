@@ -4,7 +4,7 @@ This module contains the image recognition system.
 """
 
 # quit your whining
-# pyright: reportDeprecated=false,reportMissingTypeStubs=false
+# pyright: reportMissingTypeStubs=false
 
 import os
 
@@ -71,7 +71,7 @@ def detect_objects(
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     # Create a TensorImage object from the RGB image.
-    # pylint: disable-next=C0301
+    # pylint: disable-next=line-too-long
     input_tensor = tf_vision.TensorImage.create_from_array(rgb_image)  # type: ignore[reportUnknownMemberType]
 
     # Run object detection estimation using the model.
