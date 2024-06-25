@@ -27,8 +27,10 @@ class FPSConfig:
             avg_frame_count: Get the average of the last <avg_frame_count> frames.
         """
 
-        self.frame_count = 0  # The current frame count
-        self.latest_fps = 0  # The latest FPS value
+        self.frame_count: int = 0  # The current frame count
+        self.start_time: float = 0.0
+        self.end_time: float = 0.0
+        self.latest_fps: float = 0.0  # The latest FPS value
         self.__fps: list[float] = []
         self.__history_len = history_len
         self.__avg_frame_count: int = avg_frame_count
@@ -132,9 +134,7 @@ def capture(
     cpu_threads = cpu_threads or multiprocessing.cpu_count()
     tf_detector = detector.create_detector(model_name, cpu_threads)
 
-    start_time = time.time()
     logger = LoggerFactory().get_logger(__name__)
-
     logger.info("Starting the detection process...")
     logger.info("Using camera ID: %s", camera_id)
     logger.info("Using camera resolution: %sx%s", resolution[0], resolution[1])
@@ -143,6 +143,7 @@ def capture(
     _ = cam_cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0])
     _ = cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1])
 
+    fps.start_time = time.time()  # Start the timer
     while cam_cap.isOpened():
         try:
             read_success, image = cam_cap.read()
@@ -155,23 +156,27 @@ def capture(
 
             # Detect objects in the image
             detection_result = detector.detect_objects(tf_detector, image)
-
             logger.info("Detected objects: %d", len(detection_result.detections))
+            # logger.debug("Raw Detection: %s", detection_result.detections)
             logger.debug(
                 "Detection: %s",
-                [detection.categories for detection in detection_result.detections],
+                [
+                    ",".join([dc.category_name for dc in detection.categories])
+                    for detection in detection_result.detections
+                ],
             )
+
             # pylint: disable-next=fixme
             # TODO: send data to MCU
             # for detection in detection_result.detections:
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:
-                end_time = time.time()
-                latest_fps = fps.avg_frame_count / (end_time - start_time)
-                start_time = time.time()
-                logger.debug("FPS = %s", latest_fps)
-                fps.add_record(latest_fps)
+                fps.end_time = time.time()
+                fps.latest_fps = fps.avg_frame_count / (fps.end_time - fps.start_time)
+                fps.start_time = time.time()
+                logger.debug("FPS = %s", fps.latest_fps)
+                fps.add_record(fps.latest_fps)
 
             if camera_feed:
                 # draw detection results,
