@@ -263,9 +263,14 @@ def capture(
     )
     logger.info("Using CPU threads: %s", config.cpu_threads)
     cam_cap = cv2.VideoCapture(camera_id)
-    _ = cam_cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.resolution[0])
-    _ = cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.resolution[1])
+    logger.info("Backend API name: %s", cam_cap.getBackendName())
+    if not cam_cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.resolution[0]):
+        raise exceptions.CameraError("Unable to set the camera width.")
 
+    if not cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.resolution[1]):
+        raise exceptions.CameraError("Unable to set the camera height.")
+
+    logger.info("Starting camera loop...")
     fps.start_time = time.time()  # Start the timer
     while cam_cap.isOpened():
         try:
