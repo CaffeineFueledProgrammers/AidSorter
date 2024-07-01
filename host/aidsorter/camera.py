@@ -14,6 +14,7 @@ import cv2
 
 from aidsorter import detector, exceptions, info, visualizer
 from aidsorter.logger import LoggerFactory
+from aidsorter.mcu import MCU
 
 
 class FPSConfig:
@@ -134,7 +135,7 @@ class MCUConfig:
         for line in contents:
             self.__logger.debug("Processing line: %s", line.replace("\n", "\\n"))
             if line.startswith("#") or line.strip() == "":
-                self.__logger.debug("Skipping line...")
+                # self.__logger.debug("Skipping line...")
                 continue  # Skip comments and empty lines
 
             key, _, value = line.strip().partition("=")
@@ -151,6 +152,9 @@ class MCUConfig:
 
             elif key == "baudrate":
                 self.__baudrate = int(value)
+
+            elif key == "mcu_connection_timeout":
+                self.mcu_connection_timeout: float = float(value)
 
             elif key == "bucket1_contents":
                 bucket1_contents: tuple[str, ...] = (
@@ -232,6 +236,7 @@ def capture(
     config_path: str,
     camera_id: int = 1,
     *,
+    mcu_port: str = "/dev/ttyUSB0",
     model_name: str = "default.tflite",
     camera_feed: bool = True,
 ) -> int:
@@ -240,6 +245,7 @@ def capture(
     Args:
         config_path: The path of the configuration file.
         camera_id: The ID of the camera to use. (default: 0)
+        mcu_port: The port of the MCU. (default: "/dev/ttyUSB0")
         model_name: The name of the model to use. (default: "default.tflite")
         camera_feed: Display the camera feed. (default: True)
 
@@ -254,6 +260,7 @@ def capture(
     config = MCUConfig(config_path)
     stats_style = visualizer.StatsStyle()
     tf_detector = detector.create_detector(model_name, config.cpu_threads)
+    mcu = MCU(mcu_port, config.baudrate, config.mcu_connection_timeout)
 
     logger = LoggerFactory().get_logger(__name__)
     logger.info("Starting the detection process...")
@@ -294,9 +301,38 @@ def capture(
                 ],
             )
 
-            # pylint: disable-next=fixme
-            # TODO: send data to MCU
-            # for detection in detection_result.detections:
+            if len(detection_result.detections) > 1:
+                # TODO: enable red LED light instead
+                logger.error(
+                    "%s object/s detected. Will not proceed.",
+                    len(detection_result.detections),
+                )
+
+            elif len(detection_result.detections) == 1:
+                # TODO: Tell MCU to open the specified gate.
+                object_category: str = (
+                    detection_result.detections[0].categories[0].category_name
+                )
+                if object_category in config.bucket_contents[0]:
+                    logger.info("Object %s belongs to Bucket 1.", object_category)
+                    mcu.put_object(1)
+
+                elif object_category in config.bucket_contents[1]:
+                    logger.info("Object %s belongs to Bucket 2.", object_category)
+                    mcu.put_object(2)
+
+                elif object_category in config.bucket_contents[2]:
+                    logger.info("Object %s belongs to Bucket 3.", object_category)
+                    mcu.put_object(3)
+
+                elif object_category in config.bucket_contents[3]:
+                    logger.info("Object %s belongs to Bucket 4.", object_category)
+                    mcu.put_object(4)
+
+                else:
+                    logger.warning("Unknown object category: %s", object_category)
+                    logger.warning("Object will be put in Bucket 5.")
+                    mcu.put_object(5)
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:

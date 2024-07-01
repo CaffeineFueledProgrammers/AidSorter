@@ -45,7 +45,7 @@ class LoggerFactory:  # pylint: disable=R0903,C0115
             # handlers
             stream_handler = logging.StreamHandler()
             file_handler = RotatingFileHandler(
-                info.LOG_FILEPATH.format(strftime("%d-%m-%y_%H-%M-%S")),
+                info.LOG_FILEPATH.format(strftime("%Y-%m-%d_%H-%M-%S")),
                 maxBytes=info.LOG_MAX_BYTES,
                 backupCount=info.LOG_BACKUP_COUNT,
                 encoding=info.ENCODING,

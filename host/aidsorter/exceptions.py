@@ -14,3 +14,7 @@ class ModelNotFoundError(Exception):
 
 class InvalidMCUConfigError(Exception):
     """Raised when an invalid MCU configuration is detected."""
+
+
+class MCUConnectionError(Exception):
+    """Raised when an error occurs with the MCU connection."""
