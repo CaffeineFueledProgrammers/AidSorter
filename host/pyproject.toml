@@ -11,6 +11,8 @@ repository = "https://github.com/CaffeineFueledProgrammers/AidSorter"
 python = "~3.9"
 tflite-support = "^0.4.4"
 opencv-python = "^4.10.0.82"
+pyserial = "^3.5"
+types-pyserial = "^3.5.0.20240527"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.2.3"
