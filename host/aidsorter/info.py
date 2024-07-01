@@ -7,6 +7,8 @@ import os
 NAME = "AidSorter"
 VERSION = (0, 2, 0)
 TITLE = f"{NAME} v{'.'.join(map(str, VERSION))}"
+PROTOCOL_VERSION = "1.0"
+PROTOCOL_SEP = "\n"
 
 DEBUG_MODE = (
     logging.DEBUG

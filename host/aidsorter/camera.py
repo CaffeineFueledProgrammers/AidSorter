@@ -150,6 +150,9 @@ class MCUConfig:
                     int(value.partition("x")[2]),
                 )
 
+            elif key == "detector_debounce":
+                self.__detector_debounce = int(value)
+
             elif key == "baudrate":
                 self.__baudrate = int(value)
 
@@ -191,6 +194,7 @@ class MCUConfig:
         self.__logger.info("Configuration loaded successfully.")
         self.__logger.info("\tCPU Threads: %s", self.cpu_threads)
         self.__logger.info("\tResolution: %s", self.resolution)
+        self.__logger.info("\tDetector Debounce: %s", self.detector_debounce)
         self.__logger.info("\tBaudrate: %s", self.baudrate)
         self.__logger.info("\tBucket 1 has %s item/s", len(self.bucket_contents[0]))
         self.__logger.info("\tBucket 2 has %s item/s", len(self.bucket_contents[1]))
@@ -211,6 +215,16 @@ class MCUConfig:
         """
 
         return self.__config_path
+
+    @property
+    def detector_debounce(self) -> int:
+        """Get the debounce value in frames for the system to wait
+        before registering a new object detection.
+        Returns:
+            The debounce value in frames.
+        """
+
+        return self.__detector_debounce
 
     @property
     def baudrate(self) -> int:
@@ -261,6 +275,7 @@ def capture(
     stats_style = visualizer.StatsStyle()
     tf_detector = detector.create_detector(model_name, config.cpu_threads)
     mcu = MCU(mcu_port, config.baudrate, config.mcu_connection_timeout)
+    prev_object_category: Optional[str] = None
 
     logger = LoggerFactory().get_logger(__name__)
     logger.info("Starting the detection process...")
@@ -309,30 +324,32 @@ def capture(
                 )
 
             elif len(detection_result.detections) == 1:
-                # TODO: Tell MCU to open the specified gate.
                 object_category: str = (
                     detection_result.detections[0].categories[0].category_name
                 )
-                if object_category in config.bucket_contents[0]:
-                    logger.info("Object %s belongs to Bucket 1.", object_category)
-                    mcu.put_object(1)
+                if prev_object_category != object_category:
+                    if object_category in config.bucket_contents[0]:
+                        logger.info("Object %s belongs to Bucket 1.", object_category)
+                        mcu.put_object(1)
 
-                elif object_category in config.bucket_contents[1]:
-                    logger.info("Object %s belongs to Bucket 2.", object_category)
-                    mcu.put_object(2)
+                    elif object_category in config.bucket_contents[1]:
+                        logger.info("Object %s belongs to Bucket 2.", object_category)
+                        mcu.put_object(2)
 
-                elif object_category in config.bucket_contents[2]:
-                    logger.info("Object %s belongs to Bucket 3.", object_category)
-                    mcu.put_object(3)
+                    elif object_category in config.bucket_contents[2]:
+                        logger.info("Object %s belongs to Bucket 3.", object_category)
+                        mcu.put_object(3)
 
-                elif object_category in config.bucket_contents[3]:
-                    logger.info("Object %s belongs to Bucket 4.", object_category)
-                    mcu.put_object(4)
+                    elif object_category in config.bucket_contents[3]:
+                        logger.info("Object %s belongs to Bucket 4.", object_category)
+                        mcu.put_object(4)
 
-                else:
-                    logger.warning("Unknown object category: %s", object_category)
-                    logger.warning("Object will be put in Bucket 5.")
-                    mcu.put_object(5)
+                    else:
+                        logger.warning("Unknown object category: %s", object_category)
+                        logger.warning("Object will be put in Bucket 5.")
+                        mcu.put_object(5)
+
+                prev_object_category = object_category
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:
@@ -371,6 +388,8 @@ def capture(
     cam_cap.release()
     logger.info("Destroying all windows...")
     cv2.destroyAllWindows()
+    logger.info("Putting MCU on standby...")
+    mcu.standby()
     logger.info("Done.")
     logger.info("Min FPS: %s", fps.minimum)
     logger.info("Max FPS: %s", fps.maximum)
