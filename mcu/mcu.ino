@@ -13,6 +13,7 @@
 #define pin_servo_gate2 A1
 #define pin_servo_gate3 A2
 #define pin_servo_gate4 A3
+#define pin_servo_platform A4
 
 #define pin_ir_gate1 2
 #define pin_ir_gate2 3
@@ -33,32 +34,43 @@
 // The commands that can be sent to the MCU.
 #define PCMD_GET_PROTOCOL_VERSION "pro"  // Get the MCU's protocol version
 #define PCMD_STANDBY "stb"               // Put the MCU in standby mode
+#define PCMD_COUNT_GATE5 "ct5"          // Count the object 5
 #define PCMD_GATE1_STATUS "g1s"          // Get gate 1 status
 #define PCMD_GATE2_STATUS "g2s"          // Get gate 2 status
 #define PCMD_GATE3_STATUS "g3s"          // Get gate 3 status
 #define PCMD_GATE4_STATUS "g4s"          // Get gate 4 status
+#define PCMD_PLATFORM_STATUS "PS"       // Get the platform status
 #define PCMD_GATE1_OPEN "g1o"            // Open gate 1
 #define PCMD_GATE2_OPEN "g2o"            // Open gate 2
 #define PCMD_GATE3_OPEN "g3o"            // Open gate 3
 #define PCMD_GATE4_OPEN "g4o"            // Open gate 4
+#define PCMD_PLATFORM_OPEN "pso"       // Open platform 
 #define PCMD_GATE1_CLOSE "g1c"           // Close gate 1
 #define PCMD_GATE2_CLOSE "g2c"           // Close gate 2
 #define PCMD_GATE3_CLOSE "g3c"           // Close gate 3
 #define PCMD_GATE4_CLOSE "g4c"           // Close gate 4
+#define PCMD_PLATFORM_CLOSE "psc"       // Close platform
 
 // The responses that can be received from the MCU.
 #define PRES_READY "RDY"        // The MCU is ready
 #define PRES_SUCCESS "OK"       // The command was successful
+#define PRES_PLATFORM_SUCCESS "OKP"       // The command failed
 #define PRES_FAILURE "KO"       // The command failed
 #define PRES_PVER_PREFIX "PV:"  // The protocol version prefix
 #define PRES_GATE_OPEN "GO"     // The gate is open
 #define PRES_GATE_CLOSED "GC"   // The gate is closed
+#define PRES_COUNT_GATE5 "CT" // The count object 5
+#define PRES_PLATFORM_OPEN "PO" // The platform is open
+#define PRES_PLATFORM_CLOSED "PC" // The platform is closed
+
 
 // Track the state of servos
 bool gate1_open = false;
 bool gate2_open = false;
 bool gate3_open = false;
 bool gate4_open = false;
+bool platform_open = false;
+
 
 // Last Debounce Time (LDT) for IR sensors
 unsigned long ldt_gate1 = 0;
@@ -77,6 +89,7 @@ Servo gate1;
 Servo gate2;
 Servo gate3;
 Servo gate4;
+Servo platform;
 LiquidCrystal_I2C lcd(0x27, LCD_COLS, LCD_ROWS);
 
 String encodeMessage(String message) { return message + PROTOCOL_SEP; }
@@ -120,9 +133,9 @@ void showBucketStatistics() {
   lcd.setCursor(0, 1);
   lcd.print("Hygiene:      " + String(bucket2_count));
   lcd.setCursor(0, 2);
-  lcd.print("Dry Goods:    " + String(bucket3_count));
+  lcd.print(" Biscuits:" + String(bucket3_count));
   lcd.setCursor(0, 3);
-  lcd.print("Drinks:       " + String(bucket4_count));
+  lcd.print(" Noodles:" + String(bucket4_count));
 }
 
 void checkProximitySensor(int sensorPin, Servo &servo, bool &servoOpen,
@@ -214,7 +227,11 @@ void loop() {
       bucket4_count++;
       showBucketStatistics();  // TODO: Remove this line
       Serial.print(encodeMessage(PRES_SUCCESS));
-    } else if (command.equalsIgnoreCase(PCMD_GATE1_CLOSE)) {
+    } else if(command.equalsIgnoreCase(PCMD_PLATFORM_OPEN)) {
+      platform.write(servo_angle_open);
+      gate4_open = true;
+      Serial.print(encodeMessage(PRES_PLATFORM_SUCCESS));
+    else if (command.equalsIgnoreCase(PCMD_GATE1_CLOSE)) {
       gate1.write(servo_angle_close);
       gate1_open = false;
       Serial.print(encodeMessage(PRES_SUCCESS));
@@ -230,7 +247,12 @@ void loop() {
       gate4.write(servo_angle_close);
       gate4_open = false;
       Serial.print(encodeMessage(PRES_SUCCESS));
-    } else {
+      
+    } else if (command.equalsIgnoreCase(PCMD_PLATFORM_CLOSE)) {
+      platform.write(servo_angle_close);
+      platform_open = false;
+      Serial.print(encodeMessage(PRES_PLATFORM_SUCCESS));
+    else {
       Serial.print(encodeMessage(PRES_FAILURE));
     }
   }
@@ -258,14 +280,14 @@ void loop() {
 
   // Check the proximity sensors and close the corresponding servos if not
   // detected and open
-  /*
+  
   checkProximitySensor(pin_ir_gate1, gate1, gate1_open, ldt_gate1,
                        "Servo 1 (canned goods)");
   checkProximitySensor(pin_ir_gate2, gate2, gate2_open, ldt_gate2,
                        "Servo 2 (hygiene)");
   checkProximitySensor(pin_ir_gate3, gate3, gate3_open, ldt_gate3,
-                       "Servo 3 (dry goods)");
+                       "Servo 3 (biscuits)");
   checkProximitySensor(pin_ir_gate4, gate4, gate4_open, ldt_gate4,
-                       "Servo 4 (drinks)");
-                       */
+                       "Servo 4 (noodles)");
+                       
 }

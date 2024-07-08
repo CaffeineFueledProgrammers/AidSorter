@@ -19,6 +19,7 @@ class Commands(Enum):
 
     GET_PROTOCOL_VERSION = "pro"  # Get the MCU's protocol version
     STANDBY = "stb"  # Put the MCU in standby mode
+    
     GATE1_STATUS = "g1s"  # Get gate 1 status
     GATE2_STATUS = "g2s"  # Get gate 2 status
     GATE3_STATUS = "g3s"  # Get gate 3 status
@@ -116,6 +117,7 @@ class MCU:
             _ = self.connection.write(self._encode_command(Commands.GATE4_OPEN))
 
         elif gate == 5:
+           
             # TODO: allow the object to fall to the end of the conveyor belt
             pass
 
