@@ -15,10 +15,11 @@
 #define pin_servo_gate4 A3
 #define pin_servo_platform A4
 
-#define pin_ir_gate1 2
-#define pin_ir_gate2 3
-#define pin_ir_gate3 4
-#define pin_ir_gate4 5
+#define pin_ir_bucket1 2
+#define pin_ir_bucket2 3
+#define pin_ir_bucket3 4
+#define pin_ir_bucket4 5
+#define pin_ir_bucket5 6
 
 #define servo_angle_open 0    // Angle to open the servo
 #define servo_angle_close 90  // Angle to close the servo
@@ -50,6 +51,12 @@
 #define PCMD_GATE3_CLOSE "g3c"           // Close gate 3
 #define PCMD_GATE4_CLOSE "g4c"           // Close gate 4
 #define PCMD_PLATFORM_CLOSE "psc"       // Close platform
+#define PCMD_IR_STATUS "irs"             // Get IR sensor status
+#define PCMD_IR_ACK_1 "ir1"              // Acknowledge IR sensor 1 detection
+#define PCMD_IR_ACK_2 "ir2"              // Acknowledge IR sensor 2 detection
+#define PCMD_IR_ACK_3 "ir3"              // Acknowledge IR sensor 3 detection
+#define PCMD_IR_ACK_4 "ir4"              // Acknowledge IR sensor 4 detection
+#define PCMD_IR_ACK_5 "ir5"              // Acknowledge IR sensor 5 detection
 
 // The responses that can be received from the MCU.
 #define PRES_READY "RDY"        // The MCU is ready
@@ -63,6 +70,7 @@
 #define PRES_PLATFORM_OPEN "PO" // The platform is open
 #define PRES_PLATFORM_CLOSED "PC" // The platform is closed
 
+#define PRES_IR_STATUS "IS:"    // IR sensor status prefix
 
 // Track the state of servos
 bool gate1_open = false;
@@ -72,17 +80,25 @@ bool gate4_open = false;
 bool platform_open = false;
 
 
+bool ir_detected_bucket1 = false;
+bool ir_detected_bucket2 = false;
+bool ir_detected_bucket3 = false;
+bool ir_detected_bucket4 = false;
+bool ir_detected_bucket5 = false;
+
 // Last Debounce Time (LDT) for IR sensors
 unsigned long ldt_gate1 = 0;
 unsigned long ldt_gate2 = 0;
 unsigned long ldt_gate3 = 0;
 unsigned long ldt_gate4 = 0;
+unsigned long ldt_gate5 = 0;
 
 // Item counts
 unsigned int bucket1_count = 0;
 unsigned int bucket2_count = 0;
 unsigned int bucket3_count = 0;
 unsigned int bucket4_count = 0;
+unsigned int bucket5_count = 0;
 
 // Initialize objects
 Servo gate1;
@@ -138,17 +154,14 @@ void showBucketStatistics() {
   lcd.print(" Noodles:" + String(bucket4_count));
 }
 
-void checkProximitySensor(int sensorPin, Servo &servo, bool &servoOpen,
-                          unsigned long &lastDebounceTime, String servoName) {
+void checkProximitySensor(int sensorPin, unsigned long &lastDebounceTime,
+                          bool &ir_detected) {
   int sensorValue = digitalRead(sensorPin);
-  if (sensorValue == LOW &&
-      servoOpen) {  // Change HIGH to LOW to check for absence of object
+  if (sensorValue ==
+      LOW) {  // Change HIGH to LOW to check for absence of object
     unsigned long currentTime = millis();
     if ((currentTime - lastDebounceTime) > debounce) {
-      servo.write(servo_angle_close);
-      servo.write(servo_angle_close);
-      servoOpen = false;
-      // Serial.print(String(servoName) + " closed by sensor\n");
+      ir_detected = true;
       lastDebounceTime = currentTime;
     }
   }
@@ -168,10 +181,11 @@ void setup() {
   gate4.write(servo_angle_close);
 
   // Initialize the IR sensors
-  pinMode(pin_ir_gate1, INPUT);
-  pinMode(pin_ir_gate2, INPUT);
-  pinMode(pin_ir_gate3, INPUT);
-  pinMode(pin_ir_gate4, INPUT);
+  pinMode(pin_ir_bucket1, INPUT);
+  pinMode(pin_ir_bucket2, INPUT);
+  pinMode(pin_ir_bucket3, INPUT);
+  pinMode(pin_ir_bucket4, INPUT);
+  pinMode(pin_ir_bucket5, INPUT);
 
   // Initialize the LCD
   lcd.begin(LCD_COLS, LCD_ROWS);
@@ -248,6 +262,29 @@ void loop() {
       gate4_open = false;
       Serial.print(encodeMessage(PRES_SUCCESS));
       
+    } else if (command.equalsIgnoreCase(PCMD_IR_STATUS)) {
+      String ir_status = PRES_IR_STATUS;
+      ir_status += ir_detected_bucket1 ? "1" : "0";
+      ir_status += ir_detected_bucket2 ? "1" : "0";
+      ir_status += ir_detected_bucket3 ? "1" : "0";
+      ir_status += ir_detected_bucket4 ? "1" : "0";
+      ir_status += ir_detected_bucket5 ? "1" : "0";
+      Serial.print(encodeMessage(ir_status));
+    } else if (command.equalsIgnoreCase(PCMD_IR_ACK_1)) {
+      ir_detected_bucket1 = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_IR_ACK_2)) {
+      ir_detected_bucket2 = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_IR_ACK_3)) {
+      ir_detected_bucket3 = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_IR_ACK_4)) {
+      ir_detected_bucket4 = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_IR_ACK_5)) {
+      ir_detected_bucket5 = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
     } else if (command.equalsIgnoreCase(PCMD_PLATFORM_CLOSE)) {
       platform.write(servo_angle_close);
       platform_open = false;
@@ -257,37 +294,11 @@ void loop() {
     }
   }
 
-  /*
-      else if (input.equalsIgnoreCase("1")) {
-        gate1.write(servo_angle_open);
-        gate1_open = true;
-        bucket1_count++;
-      } else if (input.equalsIgnoreCase("2")) {
-        gate2.write(servo_angle_open);
-        gate2_open = true;
-        bucket2_count++;
-      } else if (input.equalsIgnoreCase("3")) {
-        gate3.write(servo_angle_open);
-        gate3_open = true;
-        bucket3_count++;
-      } else if (input.equalsIgnoreCase("4")) {
-        gate4.write(servo_angle_open);
-        gate4_open = true;
-        bucket4_count++;
-      }
-      showBucketStatistics();
-    */
-
-  // Check the proximity sensors and close the corresponding servos if not
-  // detected and open
-  
-  checkProximitySensor(pin_ir_gate1, gate1, gate1_open, ldt_gate1,
-                       "Servo 1 (canned goods)");
-  checkProximitySensor(pin_ir_gate2, gate2, gate2_open, ldt_gate2,
-                       "Servo 2 (hygiene)");
-  checkProximitySensor(pin_ir_gate3, gate3, gate3_open, ldt_gate3,
-                       "Servo 3 (biscuits)");
-  checkProximitySensor(pin_ir_gate4, gate4, gate4_open, ldt_gate4,
-                       "Servo 4 (noodles)");
-                       
+  // Check the proximity sensors and close the corresponding
+  // servos if not detected and open
+  checkProximitySensor(pin_ir_bucket1, ldt_gate1, ir_detected_bucket1);
+  checkProximitySensor(pin_ir_bucket2, ldt_gate2, ir_detected_bucket2);
+  checkProximitySensor(pin_ir_bucket3, ldt_gate3, ir_detected_bucket3);
+  checkProximitySensor(pin_ir_bucket4, ldt_gate4, ir_detected_bucket4);
+  checkProximitySensor(pin_ir_bucket5, ldt_gate5, ir_detected_bucket5);
 }
