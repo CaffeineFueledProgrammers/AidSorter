@@ -276,6 +276,7 @@ def capture(
     tf_detector = detector.create_detector(model_name, config.cpu_threads)
     mcu = MCU(mcu_port, config.baudrate, config.mcu_connection_timeout)
     prev_object_category: Optional[str] = None
+    object_sorting_in_progress: int = -1  # which bucket is targeted for the object
 
     logger = LoggerFactory().get_logger(__name__)
     logger.info("Starting the detection process...")
@@ -317,39 +318,48 @@ def capture(
             )
 
             if len(detection_result.detections) > 1:
-                # TODO: enable red LED light instead
+                mcu.set_err_led(True)
                 logger.error(
                     "%s object/s detected. Will not proceed.",
                     len(detection_result.detections),
                 )
 
             elif len(detection_result.detections) == 1:
-                object_category: str = (
-                    detection_result.detections[0].categories[0].category_name
-                )
-                if prev_object_category != object_category:
-                    if object_category in config.bucket_contents[0]:
-                        logger.info("Object %s belongs to Bucket 1.", object_category)
-                        mcu.put_object(1)
+                mcu.set_err_led(False)
+                if object_sorting_in_progress != -1:
+                    ir_status = 
 
-                    elif object_category in config.bucket_contents[1]:
-                        logger.info("Object %s belongs to Bucket 2.", object_category)
-                        mcu.put_object(2)
+                else:
+                    object_category: str = (
+                        detection_result.detections[0].categories[0].category_name
+                    )
+                    if prev_object_category != object_category:
+                        if object_category in config.bucket_contents[0]:
+                            logger.info("Object %s belongs to Bucket 1.", object_category)
+                            mcu.set_gate_state(1, True)
+                            mcu.platform_activate()
 
-                    elif object_category in config.bucket_contents[2]:
-                        logger.info("Object %s belongs to Bucket 3.", object_category)
-                        mcu.put_object(3)
+                        elif object_category in config.bucket_contents[1]:
+                            logger.info("Object %s belongs to Bucket 2.", object_category)
+                            mcu.set_gate_state(2, True)
+                            mcu.platform_activate()
 
-                    elif object_category in config.bucket_contents[3]:
-                        logger.info("Object %s belongs to Bucket 4.", object_category)
-                        mcu.put_object(4)
+                        elif object_category in config.bucket_contents[2]:
+                            logger.info("Object %s belongs to Bucket 3.", object_category)
+                            mcu.set_gate_state(3, True)
+                            mcu.platform_activate()
 
-                    else:
-                        logger.warning("Unknown object category: %s", object_category)
-                        logger.warning("Object will be put in Bucket 5.")
-                        mcu.put_object(5)
+                        elif object_category in config.bucket_contents[3]:
+                            logger.info("Object %s belongs to Bucket 4.", object_category)
+                            mcu.set_gate_state(4, True)
+                            mcu.platform_activate()
 
-                prev_object_category = object_category
+                        else:
+                            logger.warning("Unknown object category: %s", object_category)
+                            logger.warning("Object will be put in Bucket 5.")
+                            mcu.platform_activate()
+
+                    prev_object_category = object_category
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:
@@ -389,7 +399,7 @@ def capture(
     logger.info("Destroying all windows...")
     cv2.destroyAllWindows()
     logger.info("Putting MCU on standby...")
-    mcu.standby()
+    mcu.show_standby()
     logger.info("Done.")
     logger.info("Min FPS: %s", fps.minimum)
     logger.info("Max FPS: %s", fps.maximum)
