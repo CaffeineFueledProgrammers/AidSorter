@@ -3,16 +3,16 @@
 #include <Wire.h>
 
 #define PROGRAM_NAME "AidSorter"
-#define BAUDRATE 9600
+#define BAUDRATE 115200
 // protocol version for the serial communication with the SBC
 #define PROTOCOL_VERSION "1.0"
 #define PROTOCOL_SEP '\n'
 
 // PIN designations
-#define pin_servo_gate1 A1
-#define pin_servo_gate2 A2
-#define pin_servo_gate3 A3
-#define pin_servo_gate4 A0
+#define pin_servo_gate1 A0
+#define pin_servo_gate2 A1
+#define pin_servo_gate3 A2
+#define pin_servo_gate4 A3
 
 #define pin_ir_gate1 2
 #define pin_ir_gate2 3
@@ -41,10 +41,10 @@
 #define PCMD_GATE2_OPEN "g2o"            // Open gate 2
 #define PCMD_GATE3_OPEN "g3o"            // Open gate 3
 #define PCMD_GATE4_OPEN "g4o"            // Open gate 4
-// #define PCMD_GATE1_CLOSE "g1c"           // Close gate 1
-// #define PCMD_GATE2_CLOSE "g2c"           // Close gate 2
-// #define PCMD_GATE3_CLOSE "g3c"           // Close gate 3
-// #define PCMD_GATE4_CLOSE "g4c"           // Close gate 4
+#define PCMD_GATE1_CLOSE "g1c"           // Close gate 1
+#define PCMD_GATE2_CLOSE "g2c"           // Close gate 2
+#define PCMD_GATE3_CLOSE "g3c"           // Close gate 3
+#define PCMD_GATE4_CLOSE "g4c"           // Close gate 4
 
 // The responses that can be received from the MCU.
 #define PRES_READY "RDY"        // The MCU is ready
@@ -195,21 +195,41 @@ void loop() {
       gate1_open = true;
       bucket1_count++;
       showBucketStatistics();  // TODO: Remove this line
+      Serial.print(encodeMessage(PRES_SUCCESS));
     } else if (command.equalsIgnoreCase(PCMD_GATE2_OPEN)) {
       gate2.write(servo_angle_open);
       gate2_open = true;
       bucket2_count++;
       showBucketStatistics();  // TODO: Remove this line
+      Serial.print(encodeMessage(PRES_SUCCESS));
     } else if (command.equalsIgnoreCase(PCMD_GATE3_OPEN)) {
       gate3.write(servo_angle_open);
       gate3_open = true;
       bucket3_count++;
       showBucketStatistics();  // TODO: Remove this line
+      Serial.print(encodeMessage(PRES_SUCCESS));
     } else if (command.equalsIgnoreCase(PCMD_GATE4_OPEN)) {
       gate4.write(servo_angle_open);
       gate4_open = true;
       bucket4_count++;
       showBucketStatistics();  // TODO: Remove this line
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_GATE1_CLOSE)) {
+      gate1.write(servo_angle_close);
+      gate1_open = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_GATE2_CLOSE)) {
+      gate2.write(servo_angle_close);
+      gate2_open = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_GATE3_CLOSE)) {
+      gate3.write(servo_angle_close);
+      gate3_open = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_GATE4_CLOSE)) {
+      gate4.write(servo_angle_close);
+      gate4_open = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
     } else {
       Serial.print(encodeMessage(PRES_FAILURE));
     }
@@ -238,6 +258,7 @@ void loop() {
 
   // Check the proximity sensors and close the corresponding servos if not
   // detected and open
+  /*
   checkProximitySensor(pin_ir_gate1, gate1, gate1_open, ldt_gate1,
                        "Servo 1 (canned goods)");
   checkProximitySensor(pin_ir_gate2, gate2, gate2_open, ldt_gate2,
@@ -246,4 +267,5 @@ void loop() {
                        "Servo 3 (dry goods)");
   checkProximitySensor(pin_ir_gate4, gate4, gate4_open, ldt_gate4,
                        "Servo 4 (drinks)");
+                       */
 }
