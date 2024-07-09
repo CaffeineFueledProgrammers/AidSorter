@@ -9,10 +9,9 @@ import os
 import sys
 import traceback
 
-from cv2.version import opencv_version
-
 from aidsorter import camera, info
 from aidsorter.logger import LoggerFactory
+from cv2.version import opencv_version
 
 
 def main() -> int:
@@ -35,6 +34,13 @@ def main() -> int:
     )
     _ = arg_parser.add_argument(
         "-m",
+        "--mcu",
+        type=str,
+        default="/dev/ttyUSB0",
+        help="The path to the MCU port.",
+    )
+    _ = arg_parser.add_argument(
+        "-M",
         "--model",
         type=str,
         default="default.tflite",
@@ -53,6 +59,7 @@ def main() -> int:
     config_path: str = (
         parsed_args.config or info.DEFAULT_CONFIG_PATH  # pyright: ignore[reportAny]
     )
+    mcu_serial_port: str = parsed_args.mcu  # pyright: ignore[reportAny]
     model_name: str = parsed_args.model  # pyright: ignore[reportAny]
     display: bool = parsed_args.display  # pyright: ignore[reportAny]
 
@@ -65,6 +72,7 @@ def main() -> int:
     logger.info("\tPWD: %s", os.getcwd())
     logger.info("\tCamera ID: %d", camera_id)
     logger.info("\tConfig Path: %s", config_path)
+    logger.info("\tMCU Serial Port: %s", mcu_serial_port)
     logger.info("\tModel Name: %s", model_name)
     logger.info("\tCamera Feed: %s", "Enabled" if display else "Disabled")
     logger.info(
@@ -76,6 +84,7 @@ def main() -> int:
         exit_code = camera.capture(
             config_path,
             camera_id,
+            mcu_port=mcu_serial_port,
             model_name=model_name,
             camera_feed=display,
         )

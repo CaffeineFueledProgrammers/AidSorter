@@ -5,8 +5,10 @@ import logging
 import os
 
 NAME = "AidSorter"
-VERSION = (0, 2, 0)
+VERSION = (0, 3, 0)
 TITLE = f"{NAME} v{'.'.join(map(str, VERSION))}"
+PROTOCOL_VERSION = "1.0"
+PROTOCOL_SEP = "\r\n"
 
 DEBUG_MODE = (
     logging.DEBUG
