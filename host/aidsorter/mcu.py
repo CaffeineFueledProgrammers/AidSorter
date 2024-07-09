@@ -167,6 +167,11 @@ class MCU:
             raise exceptions.MCUConnectionError("The connection is not open.")
 
         _ = self.connection.write(self._encode_command(Commands.STANDBY))
+        if self._decode_response(self.connection.readline()) == Responses.SUCCESS:
+            self.logger.debug("Stats has been shown.")
+
+        else:
+            self.logger.warning("Could not show stats.")
 
     def set_err_led(self, turn_on: bool) -> None:
         _ = self.connection.write(
