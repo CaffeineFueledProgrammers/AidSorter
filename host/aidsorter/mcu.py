@@ -174,6 +174,9 @@ class MCU:
             self.logger.warning("Could not show stats.")
 
     def set_err_led(self, turn_on: bool) -> None:
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+
         _ = self.connection.write(
             self._encode_command(
                 Commands.ERR_LED_ON if turn_on else Commands.ERR_LED_OFF
