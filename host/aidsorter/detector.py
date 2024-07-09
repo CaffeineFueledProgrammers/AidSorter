@@ -9,12 +9,13 @@ This module contains the image recognition system.
 import os
 
 import cv2
-from aidsorter import exceptions
-from aidsorter.logger import LoggerFactory
 from cv2.typing import MatLike
 from tflite_support.task import core as tf_core
 from tflite_support.task import processor as tf_processor
 from tflite_support.task import vision as tf_vision
+
+from aidsorter import exceptions
+from aidsorter.logger import LoggerFactory
 
 
 def create_detector(model_name: str, num_threads: int) -> tf_vision.ObjectDetector:

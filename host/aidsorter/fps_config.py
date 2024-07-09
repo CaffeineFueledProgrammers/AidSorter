@@ -1,3 +1,6 @@
+"""AidSorter - Automatic Goods Sorting System
+"""
+
 from typing import Optional
 
 
