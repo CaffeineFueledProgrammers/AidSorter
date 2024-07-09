@@ -6,7 +6,6 @@ This module contains the system that handles camera features.
 # quit your whining
 # pyright: reportDeprecated=false
 
-import multiprocessing
 import time
 from typing import Optional
 
