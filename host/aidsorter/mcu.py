@@ -112,6 +112,14 @@ class MCU:
         return self.connection.read_until(self.sep).decode()
 
     @property
+    def ir_states(self) -> list[bool]:
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+        
+        _ = self.connection.write(self._encode_command(Commands.IR_STATUS))
+        return self.connection.read_until(self.sep).decode()
+
+    @property
     def is_gate1_open(self) -> bool:
         _ = self.connection.write(self._encode_command(Commands.GATE1_STATUS))
         return self.connection.read_until(self.sep).decode()
@@ -186,7 +194,3 @@ class MCU:
     
         else:
             raise ValueError("Invalid gate number.")
-        
-    def get_ir_state(self) -> list[bool]:
-        if not self.connection.is_open:
-            raise exceptions.MCUConnectionError("The connection is not open.")

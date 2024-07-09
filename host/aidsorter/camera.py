@@ -327,7 +327,10 @@ def capture(
             elif len(detection_result.detections) == 1:
                 mcu.set_err_led(False)
                 if object_sorting_in_progress != -1:
-                    ir_status = 
+                    if mcu.ir_states[object_sorting_in_progress - 1] == 1:
+                        mcu.set_gate_state(object_sorting_in_progress, False)
+                        object_sorting_in_progress = -1
+                        logger.info("Nahulog na siya kay %s.", object_sorting_in_progress)
 
                 else:
                     object_category: str = (
