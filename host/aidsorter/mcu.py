@@ -184,6 +184,9 @@ class MCU:
         )
 
     def platform_activate(self):
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+
         _ = self.connection.write(self._encode_command(Commands.PLATFORM_OPEN))
 
     def platform_deactivate(self):
