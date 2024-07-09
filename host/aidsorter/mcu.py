@@ -190,6 +190,9 @@ class MCU:
         _ = self.connection.write(self._encode_command(Commands.PLATFORM_OPEN))
 
     def platform_deactivate(self):
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+
         _ = self.connection.write(self._encode_command(Commands.PLATFORM_OPEN))
 
     def set_gate_state(self, gate: int, open_gate: bool) -> None:
