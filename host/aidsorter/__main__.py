@@ -9,10 +9,9 @@ import os
 import sys
 import traceback
 
-from cv2.version import opencv_version
-
 from aidsorter import camera, info
 from aidsorter.logger import LoggerFactory
+from cv2.version import opencv_version
 
 
 def main() -> int:
