@@ -51,6 +51,9 @@ class MCUConfig:
             elif key == "detector_debounce":
                 self.__detector_debounce = int(value)
 
+            elif key == "detector_samples":
+                self.__detector_samples: int = int(value)
+
             elif key == "baudrate":
                 self.__baudrate = int(value)
 
@@ -123,6 +126,17 @@ class MCUConfig:
         """
 
         return self.__detector_debounce
+
+    @property
+    def detector_samples(self) -> int:
+        """How many samples should the program take before
+        considering the object as something that belongs
+        to a bucket.
+        Returns:
+            The number of samples to take for object detection.
+        """
+
+        return self.__detector_samples
 
     @property
     def baudrate(self) -> int:
