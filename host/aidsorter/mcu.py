@@ -119,7 +119,7 @@ class MCU:
 
         _ = self.connection.write(self._encode_command(Commands.IR_STATUS))
         res = self.connection.read_until(self.sep).decode()
-        self.logger.debug(res)
+        self.logger.debug("ir_states=%s", res)
         if not res.startswith(Responses.IR_STATUS.value):
             raise exceptions.MCUConnectionError("Invalid IR status from the MCU.")
 
@@ -167,7 +167,7 @@ class MCU:
         if not self.connection.is_open:
             raise exceptions.MCUConnectionError("The connection is not open.")
 
-        _ = self.connection.write(self._encode_command(Commands.STANDBY))
+        _ = self.connection.write(self._encode_command(Commands.SHOW_STATISTICS))
         if self._decode_response(self.connection.readline()) == Responses.SUCCESS:
             self.logger.debug("Stats has been shown.")
 

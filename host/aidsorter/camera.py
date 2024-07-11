@@ -7,7 +7,6 @@ This module contains the system that handles camera features.
 # pyright: reportDeprecated=false
 
 import time
-from typing import Optional
 
 import cv2
 
@@ -61,8 +60,9 @@ def capture(
     stats_style = visualizer.StatsStyle()
     tf_detector = detector.create_detector(model_name, config.cpu_threads)
     mcu = MCU(mcu_port, config.baudrate, config.mcu_connection_timeout)
-    prev_object_category: Optional[str] = None
     object_sorting_in_progress: int = -1  # which bucket is targeted for the object
+    object_category_samples: list[str] = []
+    object_category_samples_expiration: int = 0
 
     logger = LoggerFactory().get_logger(__name__)
     logger.info("Starting the detection process...")
@@ -104,6 +104,7 @@ def capture(
                         mcu.set_gate_state(object_sorting_in_progress, False)
                         # just acknowledge all IR states...
                         # _ = mcu.acknowledge_ir_state(object_sorting_in_progress)
+                        logger.debug("Acknowledging all IR states...")
                         for i in range(1, 6):
                             _ = mcu.acknowledge_ir_state(i)
 
@@ -112,6 +113,7 @@ def capture(
                         )
                         object_sorting_in_progress = -1
                         mcu.platform_deactivate()
+                        mcu.show_statistics()
 
                 except IndexError:
                     logger.error("Unable to get IR statuses. Please check the MCU.")
@@ -119,6 +121,7 @@ def capture(
                 continue
 
             if len(detection_result.detections) > 1:
+                object_category_samples_expiration = 0
                 mcu.set_err_led(True)
                 logger.error(
                     "%s object/s detected. Will not proceed.",
@@ -126,51 +129,82 @@ def capture(
                 )
 
             elif len(detection_result.detections) == 1:
+                object_category_samples_expiration = 0
                 mcu.set_err_led(False)
                 logger.debug(
                     "object_sorting_in_progress=%s", object_sorting_in_progress
                 )
 
-                # Here, we sort the object to the correct bucket.
                 object_category: str = (
                     detection_result.detections[0].categories[0].category_name
                 )
+
                 if (
-                    prev_object_category != object_category
-                ) and object_sorting_in_progress == -1:
-                    if object_category in config.bucket_contents[0]:
-                        logger.info("Object %s belongs to Bucket 1.", object_category)
-                        mcu.set_gate_state(1, True)
-                        mcu.platform_activate()
-                        object_sorting_in_progress = 1
+                    len(object_category_samples) < config.detector_samples
+                    and object_sorting_in_progress == -1
+                ):
+                    logger.debug("Taking sample #%s.", len(object_category_samples) + 1)
+                    object_category_samples.append(object_category)
+                    continue
 
-                    elif object_category in config.bucket_contents[1]:
-                        logger.info("Object %s belongs to Bucket 2.", object_category)
-                        mcu.set_gate_state(2, True)
-                        mcu.platform_activate()
-                        object_sorting_in_progress = 2
-
-                    elif object_category in config.bucket_contents[2]:
-                        logger.info("Object %s belongs to Bucket 3.", object_category)
-                        mcu.set_gate_state(3, True)
-                        mcu.platform_activate()
-                        object_sorting_in_progress = 3
-
-                    elif object_category in config.bucket_contents[3]:
-                        logger.info("Object %s belongs to Bucket 4.", object_category)
-                        mcu.set_gate_state(4, True)
-                        mcu.platform_activate()
-                        object_sorting_in_progress = 4
-
-                    else:
-                        logger.warning("Unknown object category: %s", object_category)
-                        logger.warning("Object will be put in Bucket 5.")
-                        mcu.platform_activate()
-                        object_sorting_in_progress = 5
-
-                prev_object_category = (
-                    object_category  # Update the previous object category
+                logger.debug("Samples: %s", object_category_samples)
+                object_category = max(
+                    set(object_category_samples), key=object_category_samples.count
                 )
+                logger.info(
+                    "Object category from %s samples: %s (%s%%)",
+                    config.detector_samples,
+                    object_category,
+                    object_category_samples.count(object_category)
+                    / config.detector_samples
+                    * 100,
+                )
+                object_category_samples.clear()
+
+                # Here, we sort the object to the correct bucket.
+                if object_category in config.bucket_contents[0]:
+                    logger.info("Object %s belongs to Bucket 1.", object_category)
+                    mcu.set_gate_state(1, True)
+                    mcu.platform_activate()
+                    object_sorting_in_progress = 1
+
+                elif object_category in config.bucket_contents[1]:
+                    logger.info("Object %s belongs to Bucket 2.", object_category)
+                    mcu.set_gate_state(2, True)
+                    mcu.platform_activate()
+                    object_sorting_in_progress = 2
+
+                elif object_category in config.bucket_contents[2]:
+                    logger.info("Object %s belongs to Bucket 3.", object_category)
+                    mcu.set_gate_state(3, True)
+                    mcu.platform_activate()
+                    object_sorting_in_progress = 3
+
+                elif object_category in config.bucket_contents[3]:
+                    logger.info("Object %s belongs to Bucket 4.", object_category)
+                    mcu.set_gate_state(4, True)
+                    mcu.platform_activate()
+                    object_sorting_in_progress = 4
+
+                else:
+                    logger.warning("Unknown object category: %s", object_category)
+                    logger.warning("Object will be put in Bucket 5.")
+                    mcu.platform_activate()
+                    object_sorting_in_progress = 5
+
+            elif len(detection_result.detections) == 0:
+                if len(object_category_samples) != 0:
+                    if object_category_samples_expiration < config.detector_samples:
+                        object_category_samples_expiration += 1
+                        continue
+
+                    object_category_samples_expiration = 0
+                    logger.info(
+                        "No object detected after %s frames. Clearing %s samples.",
+                        config.detector_samples,
+                        len(object_category_samples),
+                    )
+                    object_category_samples.clear()
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:
