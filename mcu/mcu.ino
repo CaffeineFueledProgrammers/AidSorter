@@ -214,6 +214,17 @@ void setup() {
 
   Serial.begin(BAUDRATE);
   Serial.print(encodeMessage(PRES_READY));  // signal to SBC that MCU is ready
+
+  // Signal to the user that the system is ready using the error LED by
+  // blinking it for two times within 1s.
+  digitalWrite(pin_error_led, HIGH);
+  delay(250);
+  digitalWrite(pin_error_led, LOW);
+  delay(250);
+  digitalWrite(pin_error_led, HIGH);
+  delay(250);
+  digitalWrite(pin_error_led, LOW);
+  delay(250);
 }
 
 void loop() {
