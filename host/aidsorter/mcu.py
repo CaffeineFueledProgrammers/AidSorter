@@ -43,6 +43,7 @@ class Commands(Enum):
     ERR_LED_STATUS = "els"  # Error LED status
     ERR_LED_ON = "elh"  # Turn on the error LED
     ERR_LED_OFF = "ell"  # Turn off the error LED
+    ACK_OBJ_SORT = "aos"  # Acknowledge object sort
 
     IR_STATUS = "irs"  # Get the status of the IR sensor
     IR_ACK_1 = "ir1"  # Acknowledge IR sensor 1 detection
@@ -183,6 +184,12 @@ class MCU:
                 Commands.ERR_LED_ON if turn_on else Commands.ERR_LED_OFF
             )
         )
+        _ = self.connection.read_until(self.sep)
+
+    def acknowledge_object_sort(self) -> None:
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+        _ = self.connection.write(self._encode_command(Commands.ACK_OBJ_SORT))
         _ = self.connection.read_until(self.sep)
 
     def platform_activate(self):

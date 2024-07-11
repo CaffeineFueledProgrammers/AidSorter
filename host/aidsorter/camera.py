@@ -192,6 +192,8 @@ def capture(
                     mcu.platform_activate()
                     object_sorting_in_progress = 5
 
+                mcu.acknowledge_object_sort()
+
             elif len(detection_result.detections) == 0:
                 if len(object_category_samples) != 0:
                     if object_category_samples_expiration < config.detector_samples:
