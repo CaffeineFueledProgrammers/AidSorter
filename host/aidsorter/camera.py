@@ -102,7 +102,11 @@ def capture(
                 try:
                     if mcu.ir_states[object_sorting_in_progress - 1]:
                         mcu.set_gate_state(object_sorting_in_progress, False)
-                        _ = mcu.acknowledge_ir_state(object_sorting_in_progress)
+                        # just acknowledge all IR states...
+                        # _ = mcu.acknowledge_ir_state(object_sorting_in_progress)
+                        for i in range(1, 6):
+                            _ = mcu.acknowledge_ir_state(i)
+
                         logger.info(
                             "Nahulog na siya kay %s.", object_sorting_in_progress
                         )
@@ -130,7 +134,9 @@ def capture(
                 object_category: str = (
                     detection_result.detections[0].categories[0].category_name
                 )
-                if prev_object_category != object_category:
+                if (
+                    prev_object_category != object_category
+                ) and object_sorting_in_progress == -1:
                     if object_category in config.bucket_contents[0]:
                         logger.info("Object %s belongs to Bucket 1.", object_category)
                         mcu.set_gate_state(1, True)
