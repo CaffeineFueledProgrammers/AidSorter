@@ -111,6 +111,7 @@ def capture(
                             "Nahulog na siya kay %s.", object_sorting_in_progress
                         )
                         object_sorting_in_progress = -1
+                        mcu.platform_deactivate()
 
                 except IndexError:
                     logger.error("Unable to get IR statuses. Please check the MCU.")
