@@ -10,6 +10,7 @@ import time
 from typing import Optional
 
 import cv2
+
 from aidsorter import detector, exceptions, info, visualizer
 from aidsorter.fps_config import FPSConfig
 from aidsorter.logger import LoggerFactory
@@ -88,6 +89,22 @@ def capture(
                 ],
             )
 
+            if object_sorting_in_progress != -1:
+                # Here, we wait for the object to fall into the bucket.
+                try:
+                    if mcu.ir_states[object_sorting_in_progress - 1]:
+                        mcu.set_gate_state(object_sorting_in_progress, False)
+                        _ = mcu.acknowledge_ir_state(object_sorting_in_progress)
+                        logger.info(
+                            "Nahulog na siya kay %s.", object_sorting_in_progress
+                        )
+                        object_sorting_in_progress = -1
+
+                except IndexError:
+                    logger.error("Unable to get IR statuses. Please check the MCU.")
+
+                continue
+
             if len(detection_result.detections) > 1:
                 mcu.set_err_led(True)
                 logger.error(
@@ -97,64 +114,48 @@ def capture(
 
             elif len(detection_result.detections) == 1:
                 mcu.set_err_led(False)
-                if object_sorting_in_progress != -1:
-                    # Here, we wait for the object to fall into the bucket.
-                    if mcu.ir_states[object_sorting_in_progress - 1] == 1:
-                        mcu.set_gate_state(object_sorting_in_progress, False)
-                        object_sorting_in_progress = -1
-                        logger.info(
-                            "Nahulog na siya kay %s.", object_sorting_in_progress
-                        )
+                logger.debug(
+                    "object_sorting_in_progress=%s", object_sorting_in_progress
+                )
 
-                else:
-                    # Here, we sort the object to the correct bucket.
-                    object_category: str = (
-                        detection_result.detections[0].categories[0].category_name
-                    )
-                    if prev_object_category != object_category:
-                        if object_category in config.bucket_contents[0]:
-                            logger.info(
-                                "Object %s belongs to Bucket 1.", object_category
-                            )
-                            mcu.set_gate_state(1, True)
-                            mcu.platform_activate()
-                            object_sorting_in_progress = 1
+                # Here, we sort the object to the correct bucket.
+                object_category: str = (
+                    detection_result.detections[0].categories[0].category_name
+                )
+                if prev_object_category != object_category:
+                    if object_category in config.bucket_contents[0]:
+                        logger.info("Object %s belongs to Bucket 1.", object_category)
+                        mcu.set_gate_state(1, True)
+                        mcu.platform_activate()
+                        object_sorting_in_progress = 1
 
-                        elif object_category in config.bucket_contents[1]:
-                            logger.info(
-                                "Object %s belongs to Bucket 2.", object_category
-                            )
-                            mcu.set_gate_state(2, True)
-                            mcu.platform_activate()
-                            object_sorting_in_progress = 2
+                    elif object_category in config.bucket_contents[1]:
+                        logger.info("Object %s belongs to Bucket 2.", object_category)
+                        mcu.set_gate_state(2, True)
+                        mcu.platform_activate()
+                        object_sorting_in_progress = 2
 
-                        elif object_category in config.bucket_contents[2]:
-                            logger.info(
-                                "Object %s belongs to Bucket 3.", object_category
-                            )
-                            mcu.set_gate_state(3, True)
-                            mcu.platform_activate()
-                            object_sorting_in_progress = 3
+                    elif object_category in config.bucket_contents[2]:
+                        logger.info("Object %s belongs to Bucket 3.", object_category)
+                        mcu.set_gate_state(3, True)
+                        mcu.platform_activate()
+                        object_sorting_in_progress = 3
 
-                        elif object_category in config.bucket_contents[3]:
-                            logger.info(
-                                "Object %s belongs to Bucket 4.", object_category
-                            )
-                            mcu.set_gate_state(4, True)
-                            mcu.platform_activate()
-                            object_sorting_in_progress = 4
+                    elif object_category in config.bucket_contents[3]:
+                        logger.info("Object %s belongs to Bucket 4.", object_category)
+                        mcu.set_gate_state(4, True)
+                        mcu.platform_activate()
+                        object_sorting_in_progress = 4
 
-                        else:
-                            logger.warning(
-                                "Unknown object category: %s", object_category
-                            )
-                            logger.warning("Object will be put in Bucket 5.")
-                            mcu.platform_activate()
-                            object_sorting_in_progress = 5
+                    else:
+                        logger.warning("Unknown object category: %s", object_category)
+                        logger.warning("Object will be put in Bucket 5.")
+                        mcu.platform_activate()
+                        object_sorting_in_progress = 5
 
-                    prev_object_category = (
-                        object_category  # Update the previous object category
-                    )
+                prev_object_category = (
+                    object_category  # Update the previous object category
+                )
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:
@@ -188,6 +189,13 @@ def capture(
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt detected.")
             break
+
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.critical("An error occurred: %s", e)
+            logger.info("Restarting after %s seconds...", info.ERROR_RESTART_DELAY)
+            mcu.set_err_led(True)
+            time.sleep(info.ERROR_RESTART_DELAY)
+            mcu.set_err_led(False)
 
     logger.info("Releasing camera...")
     cam_cap.release()

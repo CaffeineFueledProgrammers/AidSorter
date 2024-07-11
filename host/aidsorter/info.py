@@ -9,6 +9,7 @@ VERSION = (0, 3, 0)
 TITLE = f"{NAME} v{'.'.join(map(str, VERSION))}"
 PROTOCOL_VERSION = "1.0"
 PROTOCOL_SEP = "\n"
+ERROR_RESTART_DELAY = 5  # in seconds
 
 DEBUG_MODE = (
     logging.DEBUG
