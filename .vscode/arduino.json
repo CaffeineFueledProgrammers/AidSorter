@@ -1,4 +1,6 @@
 {
     "board": "arduino:avr:uno",
-    "programmer": "avrisp"
+    "programmer": "avrisp",
+    "port": "COM7",
+    "sketch": "mcu\\mcu.ino"
 }

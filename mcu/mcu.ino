@@ -6,21 +6,21 @@
 #define BAUDRATE 115200
 // protocol version for the serial communication with the SBC
 #define PROTOCOL_VERSION "1.0"
-#define PROTOCOL_SEP '\r\n'
+#define PROTOCOL_SEP '\n'
 
 // PIN designations
 #define pin_servo_gate1 A0
 #define pin_servo_gate2 A1
 #define pin_servo_gate3 A2
 #define pin_servo_gate4 A3
-#define pin_servo_platform A4
+#define pin_servo_platform 10
 
 #define pin_ir_bucket1 2
 #define pin_ir_bucket2 3
 #define pin_ir_bucket3 4
 #define pin_ir_bucket4 5
 #define pin_ir_bucket5 6
-#define pin_error_led 7
+#define pin_error_led 9
 
 #define servo_angle_open_platform 0 // Angle to open the servo of the platform
 #define servo_angle_open12 35       // Angle to open the servo 1 & 2
