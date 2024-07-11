@@ -18,6 +18,20 @@ from aidsorter.mcu import MCU
 from aidsorter.mcu_config import MCUConfig
 
 
+def getCameraCapture(camera_id: int, resolution: tuple[int, int]) -> cv2.VideoCapture:
+    logger = LoggerFactory().get_logger(__name__)
+    logger.info("Getting camera capture...")
+    cam_cap = cv2.VideoCapture(camera_id)
+    logger.info("Backend API name: %s", cam_cap.getBackendName())
+    if not cam_cap.set(cv2.CAP_PROP_FRAME_WIDTH, resolution[0]):
+        raise exceptions.CameraError("Unable to set the camera width.")
+
+    if not cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, resolution[1]):
+        raise exceptions.CameraError("Unable to set the camera height.")
+
+    return cam_cap
+
+
 def capture(
     config_path: str,
     camera_id: int = 1,
@@ -57,13 +71,7 @@ def capture(
         "Using camera resolution: %sx%s", config.resolution[0], config.resolution[1]
     )
     logger.info("Using CPU threads: %s", config.cpu_threads)
-    cam_cap = cv2.VideoCapture(camera_id)
-    logger.info("Backend API name: %s", cam_cap.getBackendName())
-    if not cam_cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.resolution[0]):
-        raise exceptions.CameraError("Unable to set the camera width.")
-
-    if not cam_cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.resolution[1]):
-        raise exceptions.CameraError("Unable to set the camera height.")
+    cam_cap = getCameraCapture(camera_id, config.resolution)
 
     logger.info("Starting camera loop...")
     fps.start_time = time.time()  # Start the timer
@@ -189,6 +197,14 @@ def capture(
         except KeyboardInterrupt:
             logger.info("KeyboardInterrupt detected.")
             break
+
+        except exceptions.CameraError as e:
+            logger.error("An error occurred: %s", e)
+            logger.info("Restarting after %s seconds...", info.ERROR_RESTART_DELAY)
+            mcu.set_err_led(True)
+            time.sleep(info.ERROR_RESTART_DELAY)
+            mcu.set_err_led(False)
+            cam_cap = getCameraCapture(camera_id, config.resolution)
 
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.critical("An error occurred: %s", e)
