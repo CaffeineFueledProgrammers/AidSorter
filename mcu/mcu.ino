@@ -62,6 +62,7 @@
 #define PCMD_ERR_LED_STATUS "els"  // Get error LED status
 #define PCMD_ERR_LED_ON "elh"      // Turn on error LED
 #define PCMD_ERR_LED_OFF "ell"     // Turn off error LED
+#define PCMD_ACK_OBJ_SORT "aos"    // Acknowledge object sort
 
 #define PCMD_IR_STATUS "irs"  // Get IR sensor status
 #define PCMD_IR_ACK_1 "ir1"   // Acknowledge IR sensor 1 detection
@@ -249,6 +250,14 @@ void loop() {
     } else if (command.equalsIgnoreCase(PCMD_ERR_LED_OFF)) {
       digitalWrite(pin_error_led, LOW);
       is_err_led_on = false;
+      Serial.print(encodeMessage(PRES_SUCCESS));
+    } else if (command.equalsIgnoreCase(PCMD_ACK_OBJ_SORT)) {
+      for (int i = 0; i < 3; i++) {
+        digitalWrite(pin_error_led, HIGH);
+        delay(300);
+        digitalWrite(pin_error_led, LOW);
+        delay(300);
+      }
       Serial.print(encodeMessage(PRES_SUCCESS));
     } else if (command.equalsIgnoreCase(PCMD_GATE1_STATUS)) {
       Serial.print(
