@@ -167,8 +167,16 @@ class MCU:
             raise exceptions.MCUConnectionError("The connection is not open.")
 
         _ = self.connection.write(self._encode_command(Commands.STANDBY))
+        if self._decode_response(self.connection.readline()) == Responses.SUCCESS:
+            self.logger.debug("Stats has been shown.")
+
+        else:
+            self.logger.warning("Could not show stats.")
 
     def set_err_led(self, turn_on: bool) -> None:
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+
         _ = self.connection.write(
             self._encode_command(
                 Commands.ERR_LED_ON if turn_on else Commands.ERR_LED_OFF
@@ -176,9 +184,15 @@ class MCU:
         )
 
     def platform_activate(self):
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+
         _ = self.connection.write(self._encode_command(Commands.PLATFORM_OPEN))
 
     def platform_deactivate(self):
+        if not self.connection.is_open:
+            raise exceptions.MCUConnectionError("The connection is not open.")
+
         _ = self.connection.write(self._encode_command(Commands.PLATFORM_OPEN))
 
     def set_gate_state(self, gate: int, open_gate: bool) -> None:

@@ -6,7 +6,6 @@ This module contains the system that handles camera features.
 # quit your whining
 # pyright: reportDeprecated=false
 
-import multiprocessing
 import time
 from typing import Optional
 
@@ -153,7 +152,9 @@ def capture(
                             mcu.platform_activate()
                             object_sorting_in_progress = 5
 
-                    prev_object_category = object_category
+                    prev_object_category = (
+                        object_category  # Update the previous object category
+                    )
 
             # Calculate the FPS
             if fps.frame_count % fps.avg_frame_count == 0:
