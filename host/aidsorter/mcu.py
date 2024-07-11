@@ -82,7 +82,7 @@ class MCU:
         if not self.connection.is_open:
             raise exceptions.MCUConnectionError("Could not connect to the MCU.")
 
-        if self._decode_response(self.connection.readline()) != Responses.READY:
+        if self.connection.readline() != self._encode_command(Responses.READY):
             raise exceptions.MCUConnectionError("The MCU did not respond as expected.")
 
         self.logger.info("MCU connection established.")
