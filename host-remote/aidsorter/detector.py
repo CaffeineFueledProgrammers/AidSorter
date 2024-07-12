@@ -13,7 +13,6 @@ from cv2.typing import MatLike
 from tflite_support.task import core as tf_core
 from tflite_support.task import processor as tf_processor
 from tflite_support.task import vision as tf_vision
-import httpx
 
 from aidsorter import exceptions
 from aidsorter.logger import LoggerFactory

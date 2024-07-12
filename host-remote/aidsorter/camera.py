@@ -9,9 +9,6 @@ This module contains the system that handles camera features.
 import time
 
 import cv2
-import os
-import httpx
-import base64
 
 from aidsorter import detector, exceptions, info, visualizer
 from aidsorter.fps_config import FPSConfig
@@ -89,26 +86,16 @@ def capture(
             image = cv2.flip(image, 1)
 
             # Detect objects in the image
-            # detection_result = detector.detect_objects(tf_detector, image)
-            cv2.imwrite("frame.jpg", image)
-            with open("frame.jpg", "r") as f:
-                read_img_data = base64.b64encode(f.read()).decode()
-
-            detection_result = httpx.post(
-                os.getenv("REMOTE_URL"), data={"frame": read_img_data}
-            )
-
-            # logger.info("Detected objects: %d", len(detection_result.detections))
+            detection_result = detector.detect_objects(tf_detector, image)
+            logger.info("Detected objects: %d", len(detection_result.detections))
             # logger.debug("Raw Detection: %s", detection_result.detections)
-            # logger.debug(
-            #     "Detection: %s",
-            #     [
-            #         ",".join([dc.category_name for dc in detection.categories])
-            #         for detection in detection_result.detections
-            #     ],
-            # )
-            logger.info("Detected objects: %d", len(detection_result))
-            logger.debug("Detection: %s", detection_result)
+            logger.debug(
+                "Detection: %s",
+                [
+                    ",".join([dc.category_name for dc in detection.categories])
+                    for detection in detection_result.detections
+                ],
+            )
 
             if object_sorting_in_progress != -1:
                 # Here, we wait for the object to fall into the bucket.
@@ -148,7 +135,9 @@ def capture(
                     "object_sorting_in_progress=%s", object_sorting_in_progress
                 )
 
-                object_category: str = detection_result
+                object_category: str = (
+                    detection_result.detections[0].categories[0].category_name
+                )
 
                 if (
                     len(object_category_samples) < config.detector_samples
